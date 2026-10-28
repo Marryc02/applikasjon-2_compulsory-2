@@ -221,3 +221,4 @@ __marimo__/
 
 # Project output
 out/
+.claude/settings.local.json

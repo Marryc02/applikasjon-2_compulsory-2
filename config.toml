@@ -1,0 +1,32 @@
+# Pipeline configuration. No secrets in this file: API keys come from
+# environment variables (see .env.example).
+
+[area]
+name = "Hamar"
+center_lat = 60.7945
+center_lon = 11.0679
+radius_km = 25
+# Used only when an event has no coordinates.
+allowed_cities = ["Hamar", "Ridabu", "Ingeberg", "Hjellum", "Ottestad", "Stange", "Løten", "Brumunddal"]
+
+[window]
+days_ahead = 60
+
+[ticketmaster]
+country_code = "NO"
+page_size = 50
+max_events = 200        # hard cap per run
+request_timeout_s = 15
+max_retries = 3
+
+[classify]
+model = "claude-haiku-5-5"
+max_llm_calls = 100     # per run; the rest falls back to the baseline classifier
+max_total_tokens = 60000  # per run (input + output); same fallback when exceeded
+max_output_tokens = 100
+
+[safety]
+# Kill switch: if more than this share of fetched events fail validation,
+# the run is halted and nothing is staged for approval.
+max_reject_ratio = 0.7
+min_events_fetched = 1
