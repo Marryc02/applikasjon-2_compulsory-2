@@ -1,0 +1,51 @@
+# Automation: tests on every push, and a nightly pipeline run.
+# The nightly run only STAGES events. Publishing still needs a person to
+# review the staged run and approve it (see README, "Human approval").
+name: pipeline
+
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * *"   # 04:17 UTC every night
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false     # report both OSes even if one fails
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -q
+
+  nightly:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10    # hard stop for a run that hangs
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Run pipeline (stage only)
+        env:
+          TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python -m harness run
+      - name: Upload staged run for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staged-run
+          path: out/staging/
