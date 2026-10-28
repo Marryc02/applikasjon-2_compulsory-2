@@ -1,27 +1,24 @@
 # Spec
 
-> **DRAFT written by Claude, based on our discussion. Rewrite in your own words
-> before submitting.** Log what you changed in `docs/prompt-log.md`.
+**Early draft written alongside Claude, based on discussions between groupmates.**
+
 
 ## Problem
 
-Young people in Hamar who feel lonely often don't know what low-threshold
-social activities exist. Events are spread across ticketing sites, organization
-websites and posters, and nobody keeps one overview aimed at youth. Keeping
-such an overview by hand is recurring work every week.
+Hamar municipality has announced their concern on the amount of young people who report being extremely lonely. 
+We believe that a lack of knowledge greatly exacerbates this problem. 
+Events are spread across ticketing sites, organization websites and posters, and nobody keeps a single overview aimed at youth. 
+Keeping such an overview by hand is recurring work every week.
 
-The Hamar region already has a shared event calendar ("Hva skjer", run by
-Kulturnett Innlandet) with over 1000 events, but it is aimed at everyone, so
-youth activities are mixed in with everything else. The workflow collects
-events from that calendar's API (simulated with synthetic data until we get
-access), checks that each event has the required information, removes
-duplicates, decides whether it is for young people, sorts it into categories
-(music, sports, gaming, …) and, after a person approves, publishes the youth
-events as a filterable calendar, one subscribable iCal feed per category and a
-weekly digest in Norwegian.
+The Hamar region already has a shared event calendar ("Hva skjer", run by Kulturnett Innlandet) with over 1000 events, 
+but it is aimed at everyone, and the entire state, so youth activities are mixed in with everything else, everywhere. 
+The workflow collects events from that calendar's API (simulated with synthetic data until we get access), 
+checks that each event has the required information, removes duplicates, decides whether it is for young people, 
+sorts it into categories (music, sports, gaming, …) and, after a person approves, publishes the youth events as a filterable calendar, 
+one subscribable iCal feed per category and a weekly digest in Norwegian.
 
-No user accounts and no personal data: people "follow" a category by subscribing
-to its feed in their own calendar app.
+The goal is to make a solution that does not involve user accounts or personal data: People "follow" a category by subscribing to its feed in their own calendar app.
+
 
 ## Users
 
@@ -29,6 +26,7 @@ to its feed in their own calendar app.
 - **The person approving each run**, e.g. someone at a youth house or the
   municipality's culture office. Reviews the staged run before it is published.
 - **Organizations** that arrange youth activities (later: by submitting events).
+
 
 ## Definition of success
 
