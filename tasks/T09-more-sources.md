@@ -1,15 +1,16 @@
-# T09 · More sources: RSS/iCal feeds and organizer submissions
+# T09 · More sources (optional)
 
 **Status:** TODO (planning)
 
-## Goal
-Ticketmaster mostly lists large ticketed events. Add youth-focused sources:
-- Official RSS or iCal feeds from Hamar organizations (only feeds the site
-  offers for machines; no scraping). Record each in the README source table.
-- Organizer submissions: an organization drops a text announcement or poster PDF
-  into an inbox folder; an LLM stage extracts the event fields, then the
-  existing validate → classify → approve stages handle it.
+## Ideas
+- **Brønnøysundregistrene (open API, no key):** voluntary organizations
+  registered in Hamar (kommunenummer 3403) with activity categories. Use to
+  check that an event's organizer is a real organization, or to find youth
+  organizations to ask for feeds. Do **not** use the `/roller` endpoint
+  (lists people by name).
+- **iCal/RSS feeds** that individual organizations publish for machines.
+- **Organizer submissions:** text or poster PDF dropped into a folder; an LLM
+  stage extracts the fields, then the existing stages take over.
 
 ## Acceptance check (to refine)
 - Each new source has a normalizer to the event schema, a fixture, and tests.
-- A submission missing time or place is rejected with the right reason.

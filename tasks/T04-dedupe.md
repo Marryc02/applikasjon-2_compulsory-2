@@ -10,4 +10,4 @@ with `duplicate_of`.
 
 ## Acceptance check
 - `python -m pytest -k dedupe` passes.
-- On the fixture, SYN004 is removed as a duplicate of SYN001.
+- On the synthetic fixture, "ÅPEN SCENE for unge musikere!" is removed as a duplicate of "Åpen scene for unge musikere".

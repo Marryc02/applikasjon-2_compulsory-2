@@ -10,12 +10,15 @@ social activities exist. Events are spread across ticketing sites, organization
 websites and posters, and nobody keeps one overview aimed at youth. Keeping
 such an overview by hand is recurring work every week.
 
-The workflow automatically collects youth-relevant events in the Hamar area from
-official machine-readable sources (APIs, RSS/iCal feeds, and later material
-organizers submit themselves), checks that each event has the required
-information, removes duplicates, sorts events into categories (music, sports,
-gaming, …) and, after a person approves, publishes them as a filterable
-calendar, one subscribable iCal feed per category and a weekly digest in Norwegian.
+The Hamar region already has a shared event calendar ("Hva skjer", run by
+Kulturnett Innlandet) with over 1000 events, but it is aimed at everyone, so
+youth activities are mixed in with everything else. The workflow collects
+events from that calendar's API (simulated with synthetic data until we get
+access), checks that each event has the required information, removes
+duplicates, decides whether it is for young people, sorts it into categories
+(music, sports, gaming, …) and, after a person approves, publishes the youth
+events as a filterable calendar, one subscribable iCal feed per category and a
+weekly digest in Norwegian.
 
 No user accounts and no personal data: people "follow" a category by subscribing
 to its feed in their own calendar app.
@@ -40,9 +43,14 @@ The workflow's output is correct when, for a run:
 3. **No duplicates** (same normalized title, date and venue). Checked by code.
 4. **Every published event has 1–3 categories from the allowed list**, and the
    categories match hand-made labels. Measured as precision/recall per category on the test set.
+4b. **Events for other audiences are not published**, and unclear ones go to a human.
+   Measured as outcome accuracy against labelled test events (`python -m eval.run_eval`).
 5. **No emails or phone numbers** appear in published output. Checked by code.
 6. **Nothing is published without human approval**, and a run with more than
    70 % invalid events is halted. Checked by tests.
 
 Walking-skeleton status: criteria 1, 2, 3, 5 and 6 are checked by `python -m pytest`
-on synthetic data; criterion 4 is checked against expected labels for 5 events only.
+on synthetic data. Criteria 4 and 4b are measured by `python -m eval.run_eval` on 22
+synthetic events, but those labels were written together with the baseline
+classifier, so the score is not yet meaningful. Independent, human-written test
+events are needed.

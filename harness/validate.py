@@ -1,14 +1,11 @@
 """Stage 3 (validate): mechanical checks on normalized events. Pure code, no LLM.
-Rules are documented in context/event_schema.md."""
+Rules are documented in harness/context/event_schema.md."""
 from __future__ import annotations
 
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
-from .geo import haversine_km
-
-REQUIRED = ("id", "title", "start", "venue_name", "city", "source_url")
-ACTIVE_STATUSES = {"onsale", "offsale", "rescheduled"}
+REQUIRED = ("id", "title", "start", "venue_name", "kommune", "source_url")
 
 
 def validate_event(ev: dict, cfg: dict, now: datetime) -> list[str]:
@@ -21,11 +18,8 @@ def validate_event(ev: dict, cfg: dict, now: datetime) -> list[str]:
         if parsed.scheme != "https" or not parsed.netloc:
             reasons.append("invalid_url")
 
-    if ev.get("status") not in ACTIVE_STATUSES:
+    if ev.get("status") != "active":
         reasons.append("status_not_active")
-
-    if ev.get("date_tbd"):
-        reasons.append("date_tbd")
 
     if ev.get("start"):
         try:
@@ -33,25 +27,25 @@ def validate_event(ev: dict, cfg: dict, now: datetime) -> list[str]:
         except ValueError:
             reasons.append("invalid_start")
         else:
-            if start < now:
+            # An all-day event today is still upcoming.
+            cutoff = now.replace(hour=0, minute=0, second=0, microsecond=0) if ev.get("all_day") else now
+            if start < cutoff:
                 reasons.append("in_past")
             elif start > now + timedelta(days=cfg["window"]["days_ahead"]):
                 reasons.append("too_far_ahead")
 
-    area = cfg["area"]
-    if ev.get("lat") is not None and ev.get("lon") is not None:
-        dist = haversine_km(area["center_lat"], area["center_lon"], ev["lat"], ev["lon"])
-        if dist > area["radius_km"]:
-            reasons.append("outside_area")
-    elif ev.get("city") and ev["city"] not in area["allowed_cities"]:
+    if ev.get("kommune") and ev["kommune"] not in cfg["area"]["kommuner"]:
         reasons.append("outside_area")
 
     return reasons
 
 
-def validate_categories(ev: dict, allowed: set[str]) -> list[str]:
+def validate_classification(ev: dict, allowed: set[str]) -> list[str]:
+    """Problems that send an event to human review instead of publishing."""
     cats = ev.get("categories") or []
     reasons = []
+    if ev.get("youth") == "unsure":
+        reasons.append("youth_unsure")
     if not cats:
         reasons.append("no_category")
     unknown = [c for c in cats if c not in allowed]

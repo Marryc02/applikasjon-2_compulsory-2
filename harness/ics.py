@@ -29,6 +29,12 @@ def _utc(dt_iso: str) -> str:
     return datetime.fromisoformat(dt_iso).astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
+def _dtstart(ev: dict) -> str:
+    if ev.get("all_day"):
+        return f"DTSTART;VALUE=DATE:{datetime.fromisoformat(ev['start']):%Y%m%d}"
+    return f"DTSTART:{_utc(ev['start'])}"
+
+
 def build_calendar(events: list[dict], name: str, stamp: datetime) -> str:
     lines = [
         "BEGIN:VCALENDAR",
@@ -40,14 +46,14 @@ def build_calendar(events: list[dict], name: str, stamp: datetime) -> str:
     ]
     dtstamp = stamp.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     for ev in events:
-        location = ", ".join(x for x in (ev.get("venue_name"), ev.get("address"), ev.get("city")) if x)
+        location = ", ".join(x for x in (ev.get("venue_name"), ev.get("address"), ev.get("kommune")) if x)
         desc = ev.get("description") or ""
         desc = f"{desc}\n\nKilde: {ev['source_url']}".strip()
         lines += [
             "BEGIN:VEVENT",
             f"UID:{ev['id']}@hamar-youth-events",
             f"DTSTAMP:{dtstamp}",
-            f"DTSTART:{_utc(ev['start'])}",
+            _dtstart(ev),
             f"SUMMARY:{_escape(ev['title'])}",
             f"LOCATION:{_escape(location)}",
             f"URL:{ev['source_url']}",

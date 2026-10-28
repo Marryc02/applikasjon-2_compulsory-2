@@ -8,7 +8,7 @@ from harness.config import OSLO, load_config
 from harness.dedupe import dedupe
 from harness.ics import build_calendar
 from harness.privacy import strip_pii
-from harness.validate import validate_categories, validate_event
+from harness.validate import validate_classification, validate_event
 
 CFG = load_config()
 NOW = datetime(2026, 11, 2, 8, 0, tzinfo=OSLO)
@@ -17,11 +17,11 @@ ALLOWED, _ = load_categories()
 
 def good_event(**overrides):
     ev = {
-        "id": "tm:X1", "source": "ticketmaster", "source_url": "https://www.ticketmaster.no/event/X1",
-        "title": "Konsert", "start": "2026-11-05T19:00:00+01:00", "date_tbd": False, "status": "onsale",
-        "venue_name": "Hamar kulturhus", "address": "Torggata 100", "city": "Hamar",
-        "lat": 60.7949, "lon": 11.0669, "source_categories": ["Music"], "description": "",
-        "categories": [], "flags": [],
+        "id": "kn:X1", "source": "kulturnett", "source_url": "https://synthetic.example/hva-skjer/X1",
+        "title": "Konsert", "start": "2026-11-05T19:00:00+01:00", "all_day": False, "status": "active",
+        "venue_name": "Hamar kulturhus", "address": "Torggata 100", "kommune": "Hamar",
+        "lat": 60.7949, "lon": 11.0669, "organizer": "", "price": "", "source_categories": ["Konsert"],
+        "description": "", "categories": [], "youth": "", "flags": [],
     }
     ev.update(overrides)
     return ev
@@ -53,26 +53,34 @@ def test_valid_event_passes():
 @pytest.mark.parametrize("overrides, reason", [
     ({"title": ""}, "missing_field:title"),
     ({"venue_name": ""}, "missing_field:venue_name"),
+    ({"kommune": ""}, "missing_field:kommune"),
     ({"source_url": "http://insecure.example"}, "invalid_url"),
     ({"status": "cancelled"}, "status_not_active"),
-    ({"date_tbd": True}, "date_tbd"),
+    ({"status": "unknown"}, "status_not_active"),
     ({"start": "2026-10-01T19:00:00+02:00"}, "in_past"),
     ({"start": "2027-06-01T19:00:00+02:00"}, "too_far_ahead"),
-    ({"lat": 59.9127, "lon": 10.7461, "city": "Oslo"}, "outside_area"),
-    ({"lat": None, "lon": None, "city": "Lillehammer"}, "outside_area"),
+    ({"start": "not a date"}, "invalid_start"),
+    ({"kommune": "Lillehammer"}, "outside_area"),
 ])
 def test_rejections(overrides, reason):
     assert reason in validate_event(good_event(**overrides), CFG, NOW)
 
 
-def test_city_fallback_accepts_allowed_city():
-    assert validate_event(good_event(lat=None, lon=None, city="Ottestad"), CFG, NOW) == []
+@pytest.mark.parametrize("kommune", ["Hamar", "Løten", "Ringsaker", "Stange"])
+def test_all_area_municipalities_accepted(kommune):
+    assert validate_event(good_event(kommune=kommune), CFG, NOW) == []
 
 
-def test_category_validation():
-    assert validate_categories({"categories": ["music"]}, ALLOWED) == []
-    assert "no_category" in validate_categories({"categories": []}, ALLOWED)
-    assert validate_categories({"categories": ["party"]}, ALLOWED)[0].startswith("unknown_category")
+def test_all_day_event_today_is_not_in_past():
+    ev = good_event(start="2026-11-02T00:00:00+01:00", all_day=True)  # NOW is 08:00 the same day
+    assert validate_event(ev, CFG, NOW) == []
+
+
+def test_classification_validation():
+    assert validate_classification({"categories": ["music"], "youth": "yes"}, ALLOWED) == []
+    assert "no_category" in validate_classification({"categories": [], "youth": "yes"}, ALLOWED)
+    assert "youth_unsure" in validate_classification({"categories": ["music"], "youth": "unsure"}, ALLOWED)
+    assert validate_classification({"categories": ["party"], "youth": "yes"}, ALLOWED)[0].startswith("unknown_category")
 
 
 # ---------------------------------------------------------------- dedupe
@@ -89,13 +97,16 @@ def test_dedupe_same_title_different_case_and_punctuation():
 # ---------------------------------------------------------------- LLM output parsing
 
 def test_parse_llm_output_ok():
-    assert parse_llm_output('{"categories": ["music", "social"]}', ALLOWED) == ["music", "social"]
-    assert parse_llm_output('```json\n{"categories": []}\n```', ALLOWED) == []
+    assert parse_llm_output('{"categories": ["music", "social"], "youth": "yes"}', ALLOWED) == \
+        {"categories": ["music", "social"], "youth": "yes"}
+    assert parse_llm_output('```json\n{"categories": [], "youth": "unsure"}\n```', ALLOWED) == \
+        {"categories": [], "youth": "unsure"}
 
 
 @pytest.mark.parametrize("bad", [
-    "music", '{"cats": ["music"]}', '{"categories": ["party"]}',
-    '{"categories": ["music","sports","film","food"]}', '{"categories": "music"}',
+    "music", '{"cats": ["music"], "youth": "yes"}', '{"categories": ["party"], "youth": "yes"}',
+    '{"categories": ["music","sports","film","food"], "youth": "yes"}', '{"categories": "music", "youth": "yes"}',
+    '{"categories": ["music"]}', '{"categories": ["music"], "youth": "maybe"}', '["music"]',
 ])
 def test_parse_llm_output_rejects(bad):
     with pytest.raises(ValueError):
@@ -105,14 +116,31 @@ def test_parse_llm_output_rejects(bad):
 # ---------------------------------------------------------------- baseline classifier
 
 @pytest.mark.parametrize("title, source_cats, expected", [
-    ("LAN-party", ["Sports"], "gaming"),
+    ("LAN-party", ["Idrett"], "gaming"),
     ("Quiz-kveld", [], "social"),
-    ("Jazzkveld", ["Music"], "music"),
-    ("Ishockey", ["Sports", "Ice Hockey"], "sports"),
+    ("Jazzkveld", ["Konsert"], "music"),
+    ("Ishockey for nybegynnere", [], "sports"),
 ])
-def test_baseline(title, source_cats, expected):
+def test_baseline_categories(title, source_cats, expected):
     ev = good_event(title=title, source_categories=source_cats)
-    assert expected in BaselineClassifier(ALLOWED).classify(ev)
+    assert expected in BaselineClassifier(ALLOWED).classify(ev)["categories"]
+
+
+def test_baseline_does_not_match_lan_inside_words():
+    ev = good_event(title="Planleggingsmøte", source_categories=[])
+    assert "gaming" not in BaselineClassifier(ALLOWED).classify(ev)["categories"]
+
+
+@pytest.mark.parametrize("title, source_cats, expected", [
+    ("Konsert", ["Ungdom"], "yes"),
+    ("Kveld for unge voksne", [], "yes"),
+    ("Seniortreff", ["Ungdom"], "no"),   # explicit other audience wins
+    ("Babysang", [], "no"),
+    ("Kunstutstilling", [], "unsure"),
+])
+def test_baseline_youth(title, source_cats, expected):
+    ev = good_event(title=title, source_categories=source_cats)
+    assert BaselineClassifier(ALLOWED).classify(ev)["youth"] == expected
 
 
 # ---------------------------------------------------------------- ICS
@@ -125,6 +153,11 @@ def test_ics_structure_and_escaping():
     assert "SUMMARY:Pizza\\, spill\\; moro" in cal
     assert "DTSTART:20261105T180000Z" in cal  # 19:00 Oslo = 18:00 UTC
     assert all(len(line.encode()) <= 75 for line in cal.split("\r\n"))
+
+
+def test_ics_all_day_uses_date_value():
+    ev = good_event(start="2026-11-07T00:00:00+01:00", all_day=True, categories=["arts_culture"])
+    assert "DTSTART;VALUE=DATE:20261107" in build_calendar([ev], "Test", NOW)
 
 
 # ---------------------------------------------------------------- fallback when the LLM fails
@@ -144,7 +177,7 @@ class FakeLLM:
             raise ConnectionError("API down")
         if self.behaviour == "budget" and self.calls > 1:
             raise BudgetExceeded("max_llm_calls reached")
-        return ["music"]
+        return {"categories": ["music"], "youth": "yes"}
 
 
 def test_llm_errors_fall_back_to_baseline():
@@ -152,6 +185,7 @@ def test_llm_errors_fall_back_to_baseline():
     stats = classify_all(evs, FakeLLM("error"), BaselineClassifier(ALLOWED))
     assert stats["llm_errors"] == 3 and stats["fallback_used"] == 3
     assert all(e["categories"] == ["social"] and "classified_by_baseline" in e["flags"] for e in evs)
+    assert all(e["youth"] == "unsure" for e in evs)  # "Quiz-kveld" alone says nothing about age
 
 
 def test_budget_exhaustion_stops_llm_calls():
@@ -160,3 +194,41 @@ def test_budget_exhaustion_stops_llm_calls():
     stats = classify_all(evs, llm, BaselineClassifier(ALLOWED))
     assert stats["budget_exhausted"] and llm.calls == 2  # no calls after the budget is hit
     assert evs[0]["categories"] == ["music"] and evs[3]["categories"] == ["social"]
+
+
+# ---------------------------------------------------------------- Kulturnett normalizer (assumed format)
+
+from harness.sources.kulturnett import normalize
+from harness.sources.synthetic import generate
+
+
+def test_normalize_maps_assumed_format():
+    rec = {"id": "42", "tittel": " Konsert ", "beskrivelse": "Ring 912 34 567.", "start": "2026-11-05T19:00:00+01:00",
+           "heldags": False, "sted": {"navn": "Hamar kulturhus", "kommune": "Hamar", "lat": "60.79", "lon": 11.06},
+           "kategorier": ["Konsert", 7], "arrangor": "X", "pris": "Gratis",
+           "url": "https://synthetic.example/hva-skjer/42", "status": "Publisert", "_expected": {"outcome": "accepted"}}
+    ev = normalize(rec)
+    assert ev["id"] == "kn:42" and ev["title"] == "Konsert" and ev["status"] == "active"
+    assert ev["kommune"] == "Hamar" and ev["lat"] == 60.79 and ev["source_categories"] == ["Konsert"]
+    assert "912 34 567" not in ev["description"] and "pii_removed" in ev["flags"]
+    assert not any(k.startswith("_") for k in ev)  # test labels never reach the pipeline
+
+
+def test_normalize_all_day_and_missing_place():
+    ev = normalize({"id": "1", "tittel": "Utstilling", "start": "2026-11-07", "sted": None, "status": "avlyst"})
+    assert ev["all_day"] and ev["start"] == "2026-11-07T00:00:00+01:00"
+    assert ev["venue_name"] == "" and ev["kommune"] == "" and ev["status"] == "cancelled"
+
+
+def test_normalize_naive_time_is_oslo():
+    assert normalize({"id": "1", "start": "2026-07-01T12:00:00"})["start"] == "2026-07-01T12:00:00+02:00"
+
+
+# ---------------------------------------------------------------- synthetic generator
+
+def test_synthetic_is_deterministic_and_relative_to_now():
+    later = datetime(2026, 12, 1, 8, 0, tzinfo=OSLO)
+    a, b, c = generate(NOW), generate(NOW), generate(later)
+    assert a == b
+    assert a[0]["start"].startswith("2026-11-05") and c[0]["start"].startswith("2026-12-04")  # +3 days
+    assert all("_expected" in r for r in a) and len({r["id"] for r in a}) == len(a)

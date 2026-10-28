@@ -8,37 +8,28 @@ from pathlib import Path
 from .classify import BaselineClassifier, LLMClassifier, classify_all, load_categories
 from .config import OUT_DIR, get_secret
 from .dedupe import dedupe
-from .fetch_ticketmaster import fetch_live, load_offline
-from .normalize import normalize_ticketmaster
 from .publish import stage_run
-from .validate import validate_categories, validate_event
+from .sources import collect
+from .sources.kulturnett import normalize
+from .validate import validate_classification, validate_event
 
 
-def run(cfg: dict, now: datetime, offline_file: Path | None = None,
+def run(cfg: dict, now: datetime, source: str = "synthetic", offline_file: Path | None = None,
         classifier: str = "auto", base: Path = OUT_DIR, log=print) -> dict:
     run_id = now.strftime("%Y%m%d-%H%M%S")
     allowed, categories_text = load_categories()
 
     # 1. Collect
-    if offline_file:
-        raw = load_offline(offline_file)
-        source = f"offline:{Path(offline_file).name}"
-    else:
-        api_key = get_secret("TICKETMASTER_API_KEY")
-        if not api_key:
-            raise SystemExit("TICKETMASTER_API_KEY is not set. Use --offline to run on sample data.")
-        raw = fetch_live(cfg, now, api_key)
-        source = "ticketmaster:live"
+    raw, source_desc = collect(source, cfg, now, offline_file)
     raw_dir = base / "raw"
     raw_dir.mkdir(parents=True, exist_ok=True)
-    # Saved in the API's own shape, so a live response can be copied to
-    # fixtures/ and replayed offline with --offline <file>.
-    saved = {"_comment": f"Saved from {source} at {now.isoformat()}", "_embedded": {"events": raw}}
+    # Saved as {"events": [...]}, so it can be copied to fixtures/ and replayed with --offline.
+    saved = {"_comment": f"Collected from {source_desc} at {now.isoformat()}", "events": raw}
     (raw_dir / f"{run_id}.json").write_text(json.dumps(saved, ensure_ascii=False, indent=1), encoding="utf-8")
-    log(f"[1 collect]   {len(raw)} events from {source}")
+    log(f"[1 collect]   {len(raw)} events from {source_desc}")
 
-    # 2. Normalize
-    events = [normalize_ticketmaster(e) for e in raw]
+    # 2. Normalize (drops test labels such as _expected)
+    events = [normalize(r) for r in raw]
     log(f"[2 normalize] {len(events)} events, {sum('pii_removed' in e['flags'] for e in events)} had contact info removed")
 
     # 3. Validate
@@ -48,12 +39,12 @@ def run(cfg: dict, now: datetime, offline_file: Path | None = None,
         (rejected.append({**ev, "reasons": reasons}) if reasons else valid.append(ev))
     log(f"[3 validate]  {len(valid)} valid, {len(rejected)} rejected")
 
-    # Kill switch: a sudden flood of invalid events means something upstream is
-    # broken (API change, bad config, wrong area). Stop instead of publishing.
+    # Kill switch: a flood of invalid events means something upstream is broken
+    # (format change, bad config, wrong area). Stop instead of publishing.
     reject_ratio = len(rejected) / len(events) if events else 1.0
     halted_reason = None
-    if len(events) < cfg["safety"]["min_events_fetched"]:
-        halted_reason = "too_few_events_fetched"
+    if len(events) < cfg["safety"]["min_events_collected"]:
+        halted_reason = "too_few_events_collected"
     elif reject_ratio > cfg["safety"]["max_reject_ratio"]:
         halted_reason = f"reject_ratio {reject_ratio:.2f} > {cfg['safety']['max_reject_ratio']}"
 
@@ -61,7 +52,7 @@ def run(cfg: dict, now: datetime, offline_file: Path | None = None,
     unique, duplicates = dedupe(valid)
     log(f"[4 dedupe]    {len(unique)} unique, {len(duplicates)} duplicates removed")
 
-    # 5. Classify
+    # 5. Classify: for youth? which categories?
     baseline = BaselineClassifier(allowed)
     anthropic_key = get_secret("ANTHROPIC_API_KEY")
     if classifier == "llm" or (classifier == "auto" and anthropic_key):
@@ -71,20 +62,26 @@ def run(cfg: dict, now: datetime, offline_file: Path | None = None,
     else:
         primary = baseline
     class_stats = classify_all(unique, primary, baseline) if not halted_reason else {"classifier": "skipped"}
-    accepted, needs_review = [], []
+
+    accepted, not_for_youth, needs_review = [], [], []
     for ev in unique:
-        problems = validate_categories(ev, allowed)
+        if ev.get("youth") == "no":
+            not_for_youth.append(ev)
+            continue
+        problems = validate_classification(ev, allowed)
         (needs_review.append({**ev, "reasons": problems}) if problems else accepted.append(ev))
-    log(f"[5 classify]  by {class_stats['classifier']}: {len(accepted)} categorized, {len(needs_review)} need review")
+    log(f"[5 classify]  by {class_stats['classifier']}: {len(accepted)} for youth, "
+        f"{len(not_for_youth)} not for youth, {len(needs_review)} need review")
 
     # 6. Stage for human approval
     report = {
         "run_id": run_id,
         "run_time": now.isoformat(),
-        "source": source,
+        "source": source_desc,
         "counts": {
-            "fetched": len(raw), "valid": len(valid), "rejected": len(rejected),
-            "duplicates": len(duplicates), "accepted": len(accepted), "needs_review": len(needs_review),
+            "collected": len(raw), "valid": len(valid), "rejected": len(rejected),
+            "duplicates": len(duplicates), "accepted": len(accepted),
+            "not_for_youth": len(not_for_youth), "needs_review": len(needs_review),
         },
         "reject_ratio": round(reject_ratio, 3),
         "rejection_reasons": _count_reasons(rejected),
@@ -92,7 +89,9 @@ def run(cfg: dict, now: datetime, offline_file: Path | None = None,
         "halted": halted_reason is not None,
         "halted_reason": halted_reason,
     }
-    run_dir = stage_run(run_id, accepted, rejected, duplicates, needs_review, report, sorted(allowed), now, base)
+    outputs = {"rejected": rejected, "duplicates": duplicates, "not_for_youth": not_for_youth,
+               "needs_review": needs_review}
+    run_dir = stage_run(run_id, accepted, outputs, report, sorted(allowed), now, base)
     if halted_reason:
         log(f"[6 stage]     HALTED by kill switch: {halted_reason}. Nothing staged for approval.")
     else:
