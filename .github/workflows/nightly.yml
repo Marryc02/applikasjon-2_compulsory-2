@@ -38,14 +38,15 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
-      - name: Run pipeline (stage only)
+      - name: Run pipeline on the simulated Kulturnett feed (stage only)
         env:
-          TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: python -m harness run
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}   # optional; without it the baseline classifies
+        run: python -m harness run --source synthetic
+      - name: Evaluation run
+        run: python -m eval.run_eval
       - name: Upload staged run for review
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: staged-run
-          path: out/staging/
+          path: out/

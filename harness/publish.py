@@ -26,11 +26,13 @@ def _write_json(path: Path, data) -> None:
 def build_digest(events: list[dict], now: datetime) -> str:
     """Weekly digest in Norwegian: events in the next 7 days, grouped by day."""
     end = now + timedelta(days=7)
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
     week = sorted(
-        (e for e in events if now <= datetime.fromisoformat(e["start"]) < end),
+        (e for e in events
+         if (today if e.get("all_day") else now) <= datetime.fromisoformat(e["start"]) < end),
         key=lambda e: e["start"],
     )
-    out = [f"# Denne uka for unge i Hamar", "",
+    out = ["# Denne uka for unge i Hamar", "",
            f"Arrangementer {now.day}. {MONTHS_NO[now.month - 1]} – {end.day}. {MONTHS_NO[end.month - 1]}.", ""]
     if not week:
         out.append("Ingen arrangementer funnet denne uka.")
@@ -42,7 +44,8 @@ def build_digest(events: list[dict], now: datetime) -> str:
             out += ["", f"## {DAYS_NO[start.weekday()].capitalize()} {start.day}. {MONTHS_NO[start.month - 1]}", ""]
             current_day = day
         cats = ", ".join(e.get("categories", []))
-        out.append(f"- **{start:%H:%M}** [{e['title']}]({e['source_url']}), {e['venue_name']} ({cats})")
+        when = "Hele dagen" if e.get("all_day") else f"{start:%H:%M}"
+        out.append(f"- **{when}** [{e['title']}]({e['source_url']}), {e['venue_name']} ({cats})")
     out += ["", "_Automatisk satt sammen og godkjent av et menneske før publisering._", ""]
     return "\n".join(out)
 
@@ -59,13 +62,13 @@ def write_outputs(target: Path, events: list[dict], allowed: list[str], now: dat
     (target / "digest.md").write_text(build_digest(events, now), encoding="utf-8")
 
 
-def stage_run(run_id: str, accepted, rejected, duplicates, needs_review, report, allowed, now,
-              base: Path = OUT_DIR) -> Path:
+def stage_run(run_id: str, accepted: list[dict], outputs: dict[str, list[dict]], report: dict,
+              allowed: list[str], now: datetime, base: Path = OUT_DIR) -> Path:
+    """outputs: name -> events, e.g. rejected, duplicates, not_for_youth, needs_review."""
     run_dir = base / "staging" / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
-    _write_json(run_dir / "rejected.json", rejected)
-    _write_json(run_dir / "duplicates.json", duplicates)
-    _write_json(run_dir / "needs_review.json", needs_review)
+    for name, events in outputs.items():
+        _write_json(run_dir / f"{name}.json", events)
     _write_json(run_dir / "report.json", report)
     if not report["halted"]:
         write_outputs(run_dir, accepted, allowed, now)
