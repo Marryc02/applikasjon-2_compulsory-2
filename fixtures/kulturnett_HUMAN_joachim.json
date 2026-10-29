@@ -1,0 +1,313 @@
+{
+  "events": [
+        {
+      "id": "joa35818712831",
+      "tittel": "Bokklubb for studenter",
+      "beskrivelse": "For studenter som liker å lese bøker.",
+      "start": "2026-11-05T18:00:00+01:00",
+      "heldags": false,
+      "sted": {
+        "navn": "Hamar Bibliotek",
+        "adresse": "Torggata 100",
+        "postnummer": "2317",
+        "kommune": "Hamar",
+        "lat": 60.7949,
+        "lon": 11.0669
+      },
+      "kategorier": [
+        "Bøker",
+        "Studenter"
+      ],
+      "arrangor": "Hamar Studentbokklubb",
+      "pris": "Gratis",
+      "url": "https://synthetic.example/hva-skjer/joa35818712831",
+      "status": "publisert",
+      "_expected": {
+        "outcome": "accepted",
+        "categories": [
+          "social"
+        ],
+        "youth": "yes"
+      }
+    },
+        {
+      "id": "joa43127732123",
+      "tittel": "BookTok for voksne",
+      "beskrivelse": "Vi møtes for å diskutere bøker vi har funnet på TikTok. Bare voksne tillatt.",
+      "start": "2026-11-08T20:00:00+01:00",
+      "heldags": false,
+      "sted": {
+        "navn": "Hamar Bibliotek",
+        "adresse": "Torggata 100",
+        "postnummer": "2317",
+        "kommune": "Hamar",
+        "lat": 60.7949,
+        "lon": 11.0669
+      },
+      "kategorier": [
+        "TikTok",
+        "Sosial",
+        "Bøker"
+      ],
+      "arrangor": "Hamar lokale BookTok elskere",
+      "pris": "Gratis",
+      "url": "https://synthetic.example/hva-skjer/joa43127732123",
+      "status": "publisert",
+      "_expected": {
+        "outcome": "not_youth"
+      }
+    },
+        {
+      "id": "joa568139811222",
+      "tittel": "Stupetrening ved stupetårnet",
+      "beskrivelse": "Vi skal trene på stuping ved Hamar stupetårn",
+      "start": "",
+      "heldags": false,
+      "sted": {
+        "navn": "Stupetårnet",
+        "adresse": "Mjøsa",
+        "postnummer": "2317",
+        "kommune": "Hamar",
+        "lat": 60.7931,
+        "lon": 11.0600
+      },
+      "kategorier": [
+        "Sport",
+        "Stuping",
+        "Aktivitet"
+      ],
+      "arrangor": "Stupeklubben",
+      "pris": "Gratis",
+      "url": "",
+      "status": "ukjent",
+      "_expected": {
+        "outcome": "rejected",
+        "reason": "status_not_active"
+      }
+    },
+        {
+      "id": "joa4181279841",
+      "tittel": "Gruppe introtime til trening ved Fønix CC Hamar",
+      "beskrivelse": "Ønsker velkommen til alle som har lyst til å begynne å trene",
+      "start": "2026-11-02T17:00:00+01:00",
+      "heldags": false,
+      "sted": {
+        "navn": "Fønix CC Hamar",
+        "adresse": "Vangsvegen 62",
+        "postnummer": "2317",
+        "kommune": "Hamar",
+        "lat": 60.7962503,
+        "lon":11.0797610
+      },
+      "kategorier": [
+        "Trening",
+        "Aktivitet",
+        "Sosial"
+      ],
+      "arrangor": "Fønix",
+      "pris": "600",
+      "url": "https://synthetic.example/hva-skjer/joa4181279841",
+      "status": "publisert",
+      "_expected": {
+        "outcome": "accepted",
+        "categories": [
+          "sports",
+          "social"
+        ],
+        "youth": "yes"
+      }
+    },
+        {
+      "id": "joa4087138128221",
+      "tittel": "Sabaton konsert på Scandic Scene Hamar",
+      "beskrivelse": "Sabaton besøker Hamar for å spille mange kuler låter.",
+      "start": "2026-11-07T20:00:00+01:00",
+      "heldags": false,
+      "sted": {
+        "navn": "Scandic Scene Hamar",
+        "adresse": "Vangsvegen 121",
+        "postnummer": "2137",
+        "kommune": "Hamar",
+        "lat": 60.79619,
+        "lon": 11.08595
+      },
+      "kategorier": [
+        "Konsert",
+        "Musikk"
+      ],
+      "arrangor": "Scandic Hamar",
+      "pris": "700",
+      "url": "https://synthetic.example/hva-skjer/joa4087138128221",
+      "status": "publisert",
+      "_expected": {
+        "outcome": "accepted",
+        "categories": [
+          "music"
+        ],
+        "youth": "yes"
+      }
+    },
+        {
+      "id": "joa5871983291",
+      "tittel": "Srikkeklubb på Brummendal Bakeri",
+      "beskrivelse": "Vi sitter og tar en kaffe og skravler mens vi strikker.",
+      "start": "2026-11-07T10:00:00+01:00",
+      "heldags": false,
+      "sted": {
+        "navn": "",
+        "adresse": "",
+        "postnummer": "",
+        "kommune": "",
+        "lat": 0,
+        "lon":0
+      },
+      "kategorier": [
+        "Kaffe",
+        "Eldre"
+      ],
+      "arrangor": "Hamar Strikkeklubb",
+      "pris": "Gratis",
+      "url": "",
+      "status": "publisert",
+      "_expected": {
+        "outcome": "rejected",
+        "reason": "missing_field:venue_name"
+      }
+    },
+        {
+      "id": "joa-empty",
+      "tittel": "",
+      "beskrivelse": "",
+      "start": "",
+      "heldags": false,
+      "sted": {
+        "navn": "",
+        "adresse": "",
+        "postnummer": "",
+        "kommune": "",
+        "lat": 0,
+        "lon": 0
+      },
+      "kategorier": [
+        "",
+        ""
+      ],
+      "arrangor": "",
+      "pris": "",
+      "url": "",
+      "status": "",
+      "_expected": {
+        "outcome": "rejected",
+        "reason": "missing_field:title"
+      }
+    },
+        {
+      "id": "joa58071983172",
+      "tittel": "Gi meg alle pengene dine",
+      "beskrivelse": "Besøk meg for å gi meg alle pengene dine",
+      "start": "2026-11-07T14:00:00+01:00",
+      "heldags": true,
+      "sted": {
+        "navn": "Stortorget",
+        "adresse": "",
+        "postnummer": "2317",
+        "kommune": "Hamar",
+        "lat": 60.79487,
+        "lon":11.06803
+      },
+      "kategorier": [
+        "Penger",
+        "Filantropi"
+      ],
+      "arrangor": "Gi meg penger AS",
+      "pris": "Ja",
+      "url": "https://synthetic.example/hva-skjer/joa58071983172",
+      "status": "publisert",
+      "_expected": {
+        "outcome": "needs_review"
+      }
+    },
+        {
+      "id": "joa58712381729",
+      "tittel": "Brettspillkveld med Terningkast7",
+      "beskrivelse": "Bli med oss og ha det gøy med forskjellige brettspill.",
+      "start": "2026-11-07T16:00:00+01:00",
+      "heldags": false,
+      "sted": {
+        "navn": "Hamar Kulturhus",
+        "adresse": "Torggata 100",
+        "postnummer": "2317",
+        "kommune": "Hamar",
+        "lat": 60.7952,
+        "lon":11.0669
+      },
+      "kategorier": [
+        "Spill",
+        "sosial"
+      ],
+      "arrangor": "Terningkast7",
+      "pris": "50",
+      "url": "https://synthetic.example/hva-skjer/joa58712381729",
+      "status": "publisert",
+      "_expected": {
+        "outcome": "accepted",
+        "categories": [
+          "gaming",
+          "social"
+        ],
+        "youth": "yes"
+      }
+    },
+      {
+      "id": "joa3581612331",
+      "tittel": "Bokklubb for studenter",
+      "beskrivelse": "For studenter som liker å lese bøker.",
+      "start": "2026-11-05T18:00:00+01:00",
+      "heldags": false,
+      "sted": {
+        "navn": "Hamar Bibliotek",
+        "adresse": "Torggata 100",
+        "postnummer": "2317",
+        "kommune": "Hamar",
+        "lat": 60.7949,
+        "lon": 11.0669
+      },
+      "kategorier": [
+        "Bøker",
+        "Studenter"
+      ],
+      "arrangor": "Hamar Studentbokklubb",
+      "pris": "Gratis",
+      "url": "https://synthetic.example/hva-skjer/joa3581612331",
+      "status": "publisert",
+      "_expected": {
+        "outcome": "duplicate"
+      }
+    },
+    {
+      "id": "joa4817981311",
+      "tittel": "Marihuana utdeling på torget",
+      "beskrivelse": "Alle er velkommen til å prøve.",
+      "start": "2026-11-10T02:00:00+01:00",
+      "heldags": false,
+      "sted": {
+        "navn": "Stortorget",
+        "adresse": "",
+        "postnummer": "2317",
+        "kommune": "Hamar",
+        "lat": 60.79487,
+        "lon":11.06803
+      },
+      "kategorier": [
+        "Sosial"
+      ],
+      "arrangor": "Weed klubben Hamar",
+      "pris": "Gratis",
+      "url": "https://synthetic.example/hva-skjer/joa4817981311",
+      "status": "publisert",
+      "_expected": {
+        "outcome": "needs_review"
+      }
+    }
+  ]
+}
