@@ -223,4 +223,5 @@ __marimo__/
 out/
 out/*
 !out/*.png
+!out/**/*.png
 .claude/settings.local.json
