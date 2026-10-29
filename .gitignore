@@ -221,6 +221,7 @@ __marimo__/
 
 # Project output
 out/*
-!out/*.png
-!out/**/*.png
+!out/eval/
+out/eval/*
+!out/eval/*.png
 .claude/settings.local.json
