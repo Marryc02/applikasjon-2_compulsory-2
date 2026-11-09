@@ -115,6 +115,26 @@ def parse_llm_output(text: str, allowed: set[str]) -> dict:
     return {"categories": list(dict.fromkeys(cats)), "youth": youth}
 
 
+def combine_answers(answers: list[dict]) -> dict:
+    """Combine repeated classifications of one event (see LLMClassifier.classify).
+
+    Audience disagreement -> youth "unsure" (human review). Category-only
+    disagreement -> keep the first answer's categories: sending those to review
+    added reviewer work without any safety gain (regression run, 9 Nov).
+    """
+    first = answers[0]
+    if len(answers) == 1:
+        return first
+    youths = {a["youth"] for a in answers}
+    cats_agree = all(set(a["categories"]) == set(first["categories"]) for a in answers)
+    if len(youths) > 1:
+        union = list(dict.fromkeys(c for a in answers for c in a["categories"]))[:3]
+        return {"categories": union, "youth": "unsure", "disagreement": "youth"}
+    if not cats_agree:
+        return {"categories": first["categories"], "youth": first["youth"], "disagreement": "categories"}
+    return first
+
+
 class BudgetExceeded(RuntimeError):
     pass
 
@@ -140,9 +160,19 @@ class LLMClassifier:
             raise BudgetExceeded("max_total_tokens reached")
 
     def classify(self, ev: dict) -> dict:
+        """Ask `self_consistency` times (default 2). Stress-test repair for model
+        variance: if the answers disagree about the audience, the event goes to
+        human review; if they only disagree about categories, the first answer's
+        categories are kept."""
+        n = max(1, int(self.cfg.get("self_consistency", 2)))
+        answers = [self._classify_once(ev) for _ in range(n)]
+        return combine_answers(answers)
+
+    def _classify_once(self, ev: dict) -> dict:
         payload = {k: ev.get(k) for k in ("title", "description", "venue_name", "source_categories", "price")}
         user = f"<event>\n{json.dumps(payload, ensure_ascii=False)}\n</event>"
         last_err: Exception | None = None
+        last_text = ""
         for _ in range(2):  # one retry on malformed output
             self._check_budget()
             resp = self.client.messages.create(
@@ -150,15 +180,25 @@ class LLMClassifier:
                 max_tokens=self.cfg["max_output_tokens"],
                 system=self.system,
                 messages=[{"role": "user", "content": user}],
+                # Sent via extra_body so it works with any version of the anthropic package.
+                extra_body={"output_config": {"effort": self.cfg.get("effort", "medium")}},
             )
             self.calls += 1
             self.tokens += resp.usage.input_tokens + resp.usage.output_tokens
             text = "".join(b.text for b in resp.content if getattr(b, "type", "") == "text")
+            last_text = text
+            if resp.stop_reason == "max_tokens":
+                # Thinking used up the output limit before any answer. Retrying at the
+                # same limit rarely helps, so fail now and let the baseline decide.
+                raise ValueError(f"output limit ({self.cfg['max_output_tokens']} tokens) reached before an "
+                                 f"answer; raise classify.max_output_tokens | reply starts: {text[:300]!r}")
             try:
                 return parse_llm_output(text, self.allowed)
             except (ValueError, json.JSONDecodeError) as e:
                 last_err = e
-        raise ValueError(f"LLM output invalid twice: {last_err}")
+        # Include the start of the model's actual reply, so we can see what went wrong.
+        raise ValueError(f"LLM output invalid twice: {last_err} | stop_reason={resp.stop_reason} "
+                         f"| reply starts: {last_text[:300]!r}")
 
 
 def classify_all(events: list[dict], primary, fallback: BaselineClassifier) -> dict:
@@ -169,7 +209,12 @@ def classify_all(events: list[dict], primary, fallback: BaselineClassifier) -> d
     for ev in events:
         if not use_fallback_only:
             try:
-                ev.update(primary.classify(ev))
+                result = dict(primary.classify(ev))
+                disagreement = result.pop("disagreement", None)
+                ev.update(result)
+                if disagreement:
+                    stats["llm_disagreements"] = stats.get("llm_disagreements", 0) + 1
+                    ev["flags"].append(f"llm_disagreement:{disagreement}")
                 continue
             except BudgetExceeded:
                 stats["budget_exhausted"] = True
@@ -177,6 +222,10 @@ def classify_all(events: list[dict], primary, fallback: BaselineClassifier) -> d
             except Exception as e:  # network error, invalid output, ...
                 stats["llm_errors"] += 1
                 ev["flags"].append(f"llm_error:{type(e).__name__}")
+                # Keep a few examples in the run report (report.json -> classification).
+                samples = stats.setdefault("llm_error_samples", [])
+                if len(samples) < 10:
+                    samples.append({"id": ev["id"], "title": ev.get("title", ""), "error": str(e)[:500]})
         ev.update(fallback.classify(ev))
         if primary is not fallback:
             stats["fallback_used"] += 1

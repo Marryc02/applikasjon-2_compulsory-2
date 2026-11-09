@@ -46,6 +46,8 @@ def validate_classification(ev: dict, allowed: set[str]) -> list[str]:
     reasons = []
     if ev.get("youth") == "unsure":
         reasons.append("youth_unsure")
+    if "llm_disagreement:youth" in ev.get("flags", []):
+        reasons.append("llm_disagreement")
     if not cats:
         reasons.append("no_category")
     unknown = [c for c in cats if c not in allowed]

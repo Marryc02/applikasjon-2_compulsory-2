@@ -112,7 +112,8 @@ def evaluate(fixture: Path, now: datetime, classifier: str, base: Path, records:
         if path.exists():
             for ev in json.loads(path.read_text(encoding="utf-8")):
                 actual[ev["id"]] = {"outcome": outcome, "categories": ev.get("categories", []),
-                                    "reasons": ev.get("reasons", [])}
+                                    "reasons": ev.get("reasons", []),
+                                    "by_baseline": "classified_by_baseline" in ev.get("flags", [])}
 
     rows, cat_tp, cat_fp, cat_fn = [], {}, {}, {}
     for ev_id, exp in expected.items():
@@ -143,6 +144,9 @@ def evaluate(fixture: Path, now: datetime, classifier: str, base: Path, records:
         "mechanical_correct": f"{sum(r['outcome_correct'] for r in mech)}/{len(mech)}",
         "judgement_correct": f"{sum(r['outcome_correct'] for r in judg)}/{len(judg)}",
         "per_category": per_category,
+        "classified_by_baseline": sorted(i for i, a in actual.items() if a.get("by_baseline")),
+        "llm_error_samples": report["classification"].get("llm_error_samples", []),
+        "llm_disagreements": report["classification"].get("llm_disagreements", 0),
         "errors": [r for r in rows if not r["outcome_correct"]],
         "rows": rows,
     }
@@ -174,7 +178,19 @@ def variance_summary(runs: list[dict]) -> dict:
 
 # ---------------------------------------------------------------- command line
 
+def _warn_fallbacks(result: dict) -> None:
+    fallback = result.get("classified_by_baseline", [])
+    if result["classifier"] == "llm" and fallback:
+        print(f"WARNING: {len(fallback)} event(s) were classified by the BASELINE because the LLM's answer "
+              f"was invalid: {', '.join(fallback)}")
+        for sample in result.get("llm_error_samples", []):
+            print(f"  {sample['id']}: {sample['error']}")
+
+
 def _print_result(result: dict) -> None:
+    _warn_fallbacks(result)
+    if result.get("llm_disagreements"):
+        print(f"Note: the LLM's repeated answers disagreed on {result['llm_disagreements']} event(s).")
     print(f"Outcome accuracy:       {result['outcome_accuracy']:.1%}")
     print(f"  mechanical (code):    {result['mechanical_correct']}")
     print(f"  judgement (classify): {result['judgement_correct']}")
@@ -226,9 +242,12 @@ def main(argv=None) -> int:
     if args.repeat == 1:
         _print_result(runs[0])
     else:
+        for r in runs:
+            _warn_fallbacks(r)
         v = result["variance"]
         print(f"Runs: {v['n_runs']}   judgement correct per run: {', '.join(v['judgement_correct_per_run'])}")
         print(f"  min {v['judgement_correct_min']}, max {v['judgement_correct_max']}, mean {v['judgement_correct_mean']}")
+        print(f"  LLM disagreements per run: {', '.join(str(r.get('llm_disagreements', 0)) for r in runs)}")
         if v["unstable_events"]:
             print("Events whose result changed between runs:")
             for u in v["unstable_events"]:

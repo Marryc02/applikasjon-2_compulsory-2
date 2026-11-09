@@ -1,0 +1,287 @@
+{
+  "fixture": "kulturnett_HUMAN_joachim.json",
+  "run_time": "2026-11-02T08:00:00+01:00",
+  "classifier": "llm",
+  "n_events": 11,
+  "outcome_accuracy": 0.727,
+  "mechanical_correct": "4/4",
+  "judgement_correct": "4/7",
+  "per_category": {
+    "gaming": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "learning": {
+      "precision": 0.0,
+      "recall": null,
+      "tp": 0,
+      "fp": 1,
+      "fn": 0
+    },
+    "music": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "social": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+    }
+  },
+  "classified_by_baseline": [],
+  "llm_error_samples": [],
+  "errors": [
+    {
+      "id": "kn:joa4181279841",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "sports",
+          "social"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "needs_review",
+        "categories": [
+          "sports"
+        ],
+        "reasons": [
+          "youth_unsure"
+        ],
+        "by_baseline": false
+      },
+      "outcome_correct": false
+    },
+    {
+      "id": "kn:joa58071983172",
+      "expected": {
+        "outcome": "needs_review"
+      },
+      "got": {
+        "outcome": "not_youth",
+        "categories": [],
+        "reasons": [],
+        "by_baseline": false
+      },
+      "outcome_correct": false
+    },
+    {
+      "id": "kn:joa4817981311",
+      "expected": {
+        "outcome": "needs_review"
+      },
+      "got": {
+        "outcome": "not_youth",
+        "categories": [],
+        "reasons": [],
+        "by_baseline": false
+      },
+      "outcome_correct": false
+    }
+  ],
+  "rows": [
+    {
+      "id": "kn:joa35818712831",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "social"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "learning",
+          "social"
+        ],
+        "reasons": [],
+        "by_baseline": false
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:joa43127732123",
+      "expected": {
+        "outcome": "not_youth"
+      },
+      "got": {
+        "outcome": "not_youth",
+        "categories": [
+          "arts_culture",
+          "social"
+        ],
+        "reasons": [],
+        "by_baseline": false
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:joa568139811222",
+      "expected": {
+        "outcome": "rejected",
+        "reason": "status_not_active"
+      },
+      "got": {
+        "outcome": "rejected",
+        "categories": [],
+        "reasons": [
+          "missing_field:start",
+          "missing_field:source_url",
+          "status_not_active"
+        ],
+        "by_baseline": false
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:joa4181279841",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "sports",
+          "social"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "needs_review",
+        "categories": [
+          "sports"
+        ],
+        "reasons": [
+          "youth_unsure"
+        ],
+        "by_baseline": false
+      },
+      "outcome_correct": false
+    },
+    {
+      "id": "kn:joa4087138128221",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "music"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "music"
+        ],
+        "reasons": [],
+        "by_baseline": false
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:joa5871983291",
+      "expected": {
+        "outcome": "rejected",
+        "reason": "missing_field:venue_name"
+      },
+      "got": {
+        "outcome": "rejected",
+        "categories": [],
+        "reasons": [
+          "missing_field:venue_name",
+          "missing_field:kommune",
+          "missing_field:source_url"
+        ],
+        "by_baseline": false
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:joa-empty",
+      "expected": {
+        "outcome": "rejected",
+        "reason": "missing_field:title"
+      },
+      "got": {
+        "outcome": "rejected",
+        "categories": [],
+        "reasons": [
+          "missing_field:title",
+          "missing_field:start",
+          "missing_field:venue_name",
+          "missing_field:kommune",
+          "missing_field:source_url",
+          "status_not_active"
+        ],
+        "by_baseline": false
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:joa58071983172",
+      "expected": {
+        "outcome": "needs_review"
+      },
+      "got": {
+        "outcome": "not_youth",
+        "categories": [],
+        "reasons": [],
+        "by_baseline": false
+      },
+      "outcome_correct": false
+    },
+    {
+      "id": "kn:joa58712381729",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "gaming",
+          "social"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "gaming",
+          "social"
+        ],
+        "reasons": [],
+        "by_baseline": false
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:joa3581612331",
+      "expected": {
+        "outcome": "duplicate"
+      },
+      "got": {
+        "outcome": "duplicate",
+        "categories": [],
+        "reasons": [],
+        "by_baseline": false
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:joa4817981311",
+      "expected": {
+        "outcome": "needs_review"
+      },
+      "got": {
+        "outcome": "not_youth",
+        "categories": [],
+        "reasons": [],
+        "by_baseline": false
+      },
+      "outcome_correct": false
+    }
+  ]
+}

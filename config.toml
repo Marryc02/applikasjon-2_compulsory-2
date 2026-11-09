@@ -16,9 +16,18 @@ days_ahead = 60
 
 [classify]
 model = "claude-haiku-5-5"
-max_llm_calls = 100     # per run; the rest falls back to the baseline classifier
-max_total_tokens = 60000  # per run (input + output); same fallback when exceeded
-max_output_tokens = 120
+max_llm_calls = 200     # per run; the rest falls back to the baseline classifier
+max_total_tokens = 150000  # per run (input + output, thinking included); same fallback when exceeded. ~$0.05 max
+# Haiku 5.5 thinks before answering, and thinking counts toward this limit.
+# Too low (we had 120) = the reply is cut off before any answer on hard events.
+# It's a ceiling, not a price: you pay only for tokens actually used.
+max_output_tokens = 2000
+# How much the model thinks: "low", "medium" (the model's default) or "high".
+effort = "medium"
+# Ask the model this many times per event (stress-test repair for model variance).
+# If the answers disagree about the audience, the event goes to human review.
+# 1 = ask once (old behaviour). Doubles the number of calls at 2.
+self_consistency = 2
 
 [safety]
 # Kill switch: if more than this share of collected events fail validation,

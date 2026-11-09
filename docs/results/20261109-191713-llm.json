@@ -1,0 +1,237 @@
+{
+  "fixture": "kulturnett_HUMAN_markus.json",
+  "run_time": "2026-11-02T08:00:00+01:00",
+  "classifier": "llm",
+  "n_events": 10,
+  "outcome_accuracy": 0.8,
+  "mechanical_correct": "4/4",
+  "judgement_correct": "4/6",
+  "per_category": {
+    "gaming": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "music": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "social": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    }
+  },
+  "classified_by_baseline": [],
+  "llm_error_samples": [],
+  "errors": [
+    {
+      "id": "kn:m02",
+      "expected": {
+        "outcome": "not_youth"
+      },
+      "got": {
+        "outcome": "needs_review",
+        "categories": [
+          "arts_culture",
+          "social"
+        ],
+        "reasons": [
+          "youth_unsure"
+        ],
+        "by_baseline": false
+      },
+      "outcome_correct": false
+    },
+    {
+      "id": "kn:m06",
+      "expected": {
+        "outcome": "not_youth"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "sports"
+        ],
+        "reasons": [],
+        "by_baseline": false
+      },
+      "outcome_correct": false
+    }
+  ],
+  "rows": [
+    {
+      "id": "kn:m01",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "gaming"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "gaming"
+        ],
+        "reasons": [],
+        "by_baseline": false
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:m02",
+      "expected": {
+        "outcome": "not_youth"
+      },
+      "got": {
+        "outcome": "needs_review",
+        "categories": [
+          "arts_culture",
+          "social"
+        ],
+        "reasons": [
+          "youth_unsure"
+        ],
+        "by_baseline": false
+      },
+      "outcome_correct": false
+    },
+    {
+      "id": "kn:m03",
+      "expected": {
+        "outcome": "duplicate"
+      },
+      "got": {
+        "outcome": "duplicate",
+        "categories": [],
+        "reasons": [],
+        "by_baseline": false
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:m04",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "music"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "music"
+        ],
+        "reasons": [],
+        "by_baseline": false
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:m05",
+      "expected": {
+        "outcome": "not_youth"
+      },
+      "got": {
+        "outcome": "not_youth",
+        "categories": [
+          "social"
+        ],
+        "reasons": [],
+        "by_baseline": false
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:m06",
+      "expected": {
+        "outcome": "not_youth"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "sports"
+        ],
+        "reasons": [],
+        "by_baseline": false
+      },
+      "outcome_correct": false
+    },
+    {
+      "id": "kn:m07",
+      "expected": {
+        "outcome": "rejected",
+        "reason": "outside_area"
+      },
+      "got": {
+        "outcome": "rejected",
+        "categories": [],
+        "reasons": [
+          "outside_area"
+        ],
+        "by_baseline": false
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:m08",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "social"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "social"
+        ],
+        "reasons": [],
+        "by_baseline": false
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:m09",
+      "expected": {
+        "outcome": "rejected",
+        "reason": "in_past"
+      },
+      "got": {
+        "outcome": "rejected",
+        "categories": [],
+        "reasons": [
+          "in_past"
+        ],
+        "by_baseline": false
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:m10",
+      "expected": {
+        "outcome": "rejected",
+        "reason": "too_far_ahead"
+      },
+      "got": {
+        "outcome": "rejected",
+        "categories": [],
+        "reasons": [
+          "too_far_ahead"
+        ],
+        "by_baseline": false
+      },
+      "outcome_correct": true
+    }
+  ]
+}

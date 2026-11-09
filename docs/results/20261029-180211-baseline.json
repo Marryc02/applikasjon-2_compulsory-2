@@ -1,0 +1,439 @@
+{
+  "fixture": "kulturnett_SYNTHETIC_2026-11-02.json",
+  "run_time": "2026-11-02T08:00:00+01:00",
+  "classifier": "baseline",
+  "n_events": 22,
+  "outcome_accuracy": 1.0,
+  "mechanical_correct": "8/8",
+  "judgement_correct": "14/14",
+  "per_category": {
+    "arts_culture": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "film": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "food": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+    },
+    "gaming": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+    },
+    "learning": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 3,
+      "fp": 0,
+      "fn": 0
+    },
+    "music": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "outdoors": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "social": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+    },
+    "sports": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    }
+  },
+  "errors": [],
+  "rows": [
+    {
+      "id": "kn:syn2026110201",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "music"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "music"
+        ],
+        "reasons": []
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110202",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "gaming",
+          "food"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "gaming",
+          "food"
+        ],
+        "reasons": []
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110203",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "sports"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "sports"
+        ],
+        "reasons": []
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110204",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "social"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "social"
+        ],
+        "reasons": []
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110205",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "learning"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "learning"
+        ],
+        "reasons": []
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110206",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "film"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "film"
+        ],
+        "reasons": []
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110207",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "outdoors"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "outdoors"
+        ],
+        "reasons": []
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110208",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "arts_culture",
+          "learning"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "arts_culture",
+          "learning"
+        ],
+        "reasons": []
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110209",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "food",
+          "learning"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "learning",
+          "food"
+        ],
+        "reasons": []
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110210",
+      "expected": {
+        "outcome": "accepted",
+        "categories": [
+          "gaming",
+          "social"
+        ],
+        "youth": "yes"
+      },
+      "got": {
+        "outcome": "accepted",
+        "categories": [
+          "gaming",
+          "social"
+        ],
+        "reasons": []
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110211",
+      "expected": {
+        "outcome": "not_youth"
+      },
+      "got": {
+        "outcome": "not_youth",
+        "categories": [
+          "social"
+        ],
+        "reasons": []
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110212",
+      "expected": {
+        "outcome": "not_youth"
+      },
+      "got": {
+        "outcome": "not_youth",
+        "categories": [],
+        "reasons": []
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110213",
+      "expected": {
+        "outcome": "not_youth"
+      },
+      "got": {
+        "outcome": "not_youth",
+        "categories": [
+          "learning"
+        ],
+        "reasons": []
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110214",
+      "expected": {
+        "outcome": "needs_review"
+      },
+      "got": {
+        "outcome": "needs_review",
+        "categories": [
+          "arts_culture"
+        ],
+        "reasons": [
+          "youth_unsure"
+        ]
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110215",
+      "expected": {
+        "outcome": "duplicate"
+      },
+      "got": {
+        "outcome": "duplicate",
+        "categories": [],
+        "reasons": []
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110216",
+      "expected": {
+        "outcome": "rejected",
+        "reason": "in_past"
+      },
+      "got": {
+        "outcome": "rejected",
+        "categories": [],
+        "reasons": [
+          "in_past"
+        ]
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110217",
+      "expected": {
+        "outcome": "rejected",
+        "reason": "status_not_active"
+      },
+      "got": {
+        "outcome": "rejected",
+        "categories": [],
+        "reasons": [
+          "status_not_active"
+        ]
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110218",
+      "expected": {
+        "outcome": "rejected",
+        "reason": "missing_field:venue_name"
+      },
+      "got": {
+        "outcome": "rejected",
+        "categories": [],
+        "reasons": [
+          "missing_field:venue_name",
+          "missing_field:kommune"
+        ]
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110219",
+      "expected": {
+        "outcome": "rejected",
+        "reason": "outside_area"
+      },
+      "got": {
+        "outcome": "rejected",
+        "categories": [],
+        "reasons": [
+          "outside_area"
+        ]
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110220",
+      "expected": {
+        "outcome": "rejected",
+        "reason": "too_far_ahead"
+      },
+      "got": {
+        "outcome": "rejected",
+        "categories": [],
+        "reasons": [
+          "too_far_ahead"
+        ]
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110221",
+      "expected": {
+        "outcome": "rejected",
+        "reason": "invalid_url"
+      },
+      "got": {
+        "outcome": "rejected",
+        "categories": [],
+        "reasons": [
+          "invalid_url"
+        ]
+      },
+      "outcome_correct": true
+    },
+    {
+      "id": "kn:syn2026110222",
+      "expected": {
+        "outcome": "rejected",
+        "reason": "missing_field:start"
+      },
+      "got": {
+        "outcome": "rejected",
+        "categories": [],
+        "reasons": [
+          "missing_field:start"
+        ]
+      },
+      "outcome_correct": true
+    }
+  ]
+}

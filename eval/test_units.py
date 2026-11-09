@@ -290,3 +290,48 @@ def test_variance_summary_finds_flipping_events():
     v = variance_summary([run("accepted", True), run("needs_review", False), run("accepted", True)])
     assert v["judgement_correct_per_run"] == ["2/2", "1/2", "2/2"] and v["judgement_correct_mean"] == 1.67
     assert [u["id"] for u in v["unstable_events"]] == ["b"] and v["unstable_events"][0]["correct_in"] == "2/3"
+
+
+# ---------------------------------------------------------------- self-consistency (stress-test repair for model variance)
+
+from harness.classify import combine_answers
+
+
+def test_combine_agreeing_answers_unchanged():
+    a = {"categories": ["gaming", "social"], "youth": "yes"}
+    assert combine_answers([a, {"categories": ["social", "gaming"], "youth": "yes"}]) == a
+
+
+def test_combine_youth_disagreement_goes_to_review():
+    r = combine_answers([{"categories": ["gaming"], "youth": "yes"}, {"categories": ["social"], "youth": "unsure"}])
+    assert r["youth"] == "unsure" and r["disagreement"] == "youth" and r["categories"] == ["gaming", "social"]
+
+
+def test_combine_category_disagreement_keeps_first_answer():
+    r = combine_answers([{"categories": ["social", "arts_culture"], "youth": "yes"},
+                         {"categories": ["social", "learning"], "youth": "yes"}])
+    assert r == {"categories": ["social", "arts_culture"], "youth": "yes", "disagreement": "categories"}
+
+
+def test_combine_category_disagreement_nothing_shared_does_not_cause_review():
+    # Regression (9 Nov): "learning" vs "social" used to give no category -> review.
+    r = combine_answers([{"categories": ["learning"], "youth": "yes"}, {"categories": ["social"], "youth": "yes"}])
+    assert r["categories"] == ["learning"] and r["youth"] == "yes"
+
+
+def test_youth_disagreement_routes_to_review_with_reason():
+    ev = good_event(categories=["gaming"], youth="unsure", flags=["llm_disagreement:youth"])
+    assert {"youth_unsure", "llm_disagreement"} <= set(validate_classification(ev, ALLOWED))
+
+
+def test_classify_all_records_disagreement():
+    class Wavering:
+        name, calls, tokens = "llm", 0, 0
+
+        def classify(self, ev):
+            return {"categories": ["gaming"], "youth": "unsure", "disagreement": "youth"}
+
+    evs = [good_event(id="tm:1")]
+    stats = classify_all(evs, Wavering(), BaselineClassifier(ALLOWED))
+    assert stats["llm_disagreements"] == 1 and "llm_disagreement:youth" in evs[0]["flags"]
+    assert "disagreement" not in evs[0]
