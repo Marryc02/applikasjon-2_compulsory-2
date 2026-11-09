@@ -30,7 +30,7 @@ Never use bare `python`, `pip`, or `pytest` commands. Always prefix with `.venv\
 ## Checks
 - `python -m pytest`: must pass before every commit.
 - `python -m harness run --offline fixtures/kulturnett_SYNTHETIC_2026-11-02.json --now 2026-11-02T08:00:00+01:00`: reproducible end-to-end run.
-- `python -m eval.run_eval`: evaluation run.
+- `python -m eval.run_eval`: evaluation run (`--check-only` to check a fixture's labels, `--repeat N` for model variance).
 
 ## Rules
 - Never edit anything in `eval/` without asking first.

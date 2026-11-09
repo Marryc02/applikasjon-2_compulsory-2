@@ -105,3 +105,62 @@ def test_kill_switch_on_empty_source(tmp_path):
     empty.write_text('{"events": []}', encoding="utf-8")
     report, _ = _run(tmp_path, offline_file=empty)
     assert report["halted"] and report["halted_reason"] == "too_few_events_collected"
+
+
+# ---------------------------------------------------------------- human review of the needs-review queue
+
+import pytest
+
+from harness.classify import load_categories
+from harness.publish import apply_review
+
+ALLOWED, _ = load_categories()
+
+
+def _staged_with_review_queue(tmp_path):
+    """A human-written fixture leaves several events in needs_review with the baseline."""
+    human = sorted((Path(__file__).resolve().parent.parent / "fixtures").glob("kulturnett_HUMAN_*.json"))
+    assert human, "no human-written fixture (fixtures/kulturnett_HUMAN_*.json) found"
+    fixture = human[0]
+    report, run_dir = _run(tmp_path, offline_file=fixture)
+    queue = _load(run_dir, "needs_review.json")
+    assert len(queue) >= 3
+    return run_dir, queue
+
+
+def test_review_accept_not_youth_drop_and_skip(tmp_path):
+    run_dir, queue = _staged_with_review_queue(tmp_path)
+    a, n, d = queue[0]["id"], queue[1]["id"], queue[2]["id"]
+    before = len(_load(run_dir, "events.json"))
+    result = apply_review(run_dir, {a: ("accept", ["gaming"]), n: ("not_youth",), d: ("drop",)}, ALLOWED)
+
+    assert result == {"accepted": 1, "not_youth": 1, "dropped": 1, "still_waiting": len(queue) - 3}
+    events = _load(run_dir, "events.json")
+    assert len(events) == before + 1
+    accepted = next(e for e in events if e["id"] == a)
+    assert accepted["categories"] == ["gaming"] and "accepted_in_review" in accepted["flags"]
+    assert n in {e["id"] for e in _load(run_dir, "not_for_youth.json")}
+    assert any(e["id"] == d and e["reasons"] == ["dropped_in_review"] for e in _load(run_dir, "rejected.json"))
+    assert {e["id"] for e in _load(run_dir, "needs_review.json")} == {e["id"] for e in queue[3:]}
+    # feeds and report are rebuilt
+    assert a in (run_dir / "feeds" / "gaming.ics").read_text(encoding="utf-8")
+    report = _load(run_dir, "report.json")
+    assert report["counts"]["accepted"] == before + 1 and len(report["review"]) == 3
+
+
+def test_review_rejects_bad_decisions(tmp_path):
+    run_dir, queue = _staged_with_review_queue(tmp_path)
+    with pytest.raises(ValueError):
+        apply_review(run_dir, {queue[0]["id"]: ("accept", ["party"])}, ALLOWED)
+    with pytest.raises(ValueError):
+        apply_review(run_dir, {queue[0]["id"]: ("accept", [])}, ALLOWED)
+    with pytest.raises(ValueError):
+        apply_review(run_dir, {"kn:not-in-queue": ("drop",)}, ALLOWED)
+    assert len(_load(run_dir, "needs_review.json")) == len(queue)  # nothing changed
+
+
+def test_no_review_after_approval(tmp_path):
+    run_dir, queue = _staged_with_review_queue(tmp_path)
+    approve(run_dir, base=tmp_path)
+    with pytest.raises(RuntimeError):
+        apply_review(run_dir, {queue[0]["id"]: ("drop",)}, ALLOWED)

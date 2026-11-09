@@ -232,3 +232,61 @@ def test_synthetic_is_deterministic_and_relative_to_now():
     assert a == b
     assert a[0]["start"].startswith("2026-11-05") and c[0]["start"].startswith("2026-12-04")  # +3 days
     assert all("_expected" in r for r in a) and len({r["id"] for r in a}) == len(a)
+
+
+# ---------------------------------------------------------------- label check and variance (eval/run_eval.py)
+
+import json as _json
+
+from eval.run_eval import check_labels, variance_summary
+
+
+def _write_fixture(tmp_path, events):
+    path = tmp_path / "f.json"
+    path.write_text(_json.dumps({"events": events}), encoding="utf-8")
+    return path
+
+
+def test_label_check_accepts_valid_labels(tmp_path):
+    path = _write_fixture(tmp_path, [
+        {"id": "a", "_expected": {"outcome": "accepted", "categories": ["music"], "youth": "yes"}},
+        {"id": "b", "_expected": {"outcome": "rejected", "reason": "in_past"}},
+        {"id": "c", "_expected": {"outcome": "not_youth"}},
+    ])
+    assert check_labels(path)[1] == []
+
+
+@pytest.mark.parametrize("label, fragment", [
+    ({"outcome": "maybe"}, "is not one of"),
+    ({"outcome": "accepted", "categories": ["sport"], "youth": "yes"}, "unknown categories"),
+    ({"outcome": "accepted", "categories": ["music"]}, '"youth": "yes"'),
+    ({"outcome": "rejected"}, "needs a \"reason\""),
+    ({"outcome": "rejected", "reason": "missing_field:sted"}, "needs a \"reason\""),
+    ({"outcome": "not_youth", "youth": "no"}, "must not have"),
+])
+def test_label_check_finds_problems(tmp_path, label, fragment):
+    problems = check_labels(_write_fixture(tmp_path, [{"id": "x", "_expected": label}]))[1]
+    assert problems and fragment in problems[0]
+
+
+def test_label_check_ids_and_json(tmp_path):
+    problems = check_labels(_write_fixture(tmp_path, [
+        {"id": "", "_expected": {"outcome": "not_youth"}},
+        {"id": "a", "_expected": {"outcome": "not_youth"}},
+        {"id": "a", "_expected": {"outcome": "not_youth"}},
+    ]))[1]
+    assert any("non-empty" in p for p in problems) and any("unique" in p for p in problems)
+    broken = tmp_path / "broken.json"
+    broken.write_text('{"events": [ {"id": "a", } ]}', encoding="utf-8")
+    assert "Not valid JSON" in check_labels(broken)[1][0]
+
+
+def test_variance_summary_finds_flipping_events():
+    def run(outcome_b, ok_b):
+        return {"judgement_correct": f"{1 + ok_b}/2", "rows": [
+            {"id": "a", "got": {"outcome": "accepted", "categories": ["music"]}, "outcome_correct": True},
+            {"id": "b", "got": {"outcome": outcome_b, "categories": []}, "outcome_correct": ok_b},
+        ]}
+    v = variance_summary([run("accepted", True), run("needs_review", False), run("accepted", True)])
+    assert v["judgement_correct_per_run"] == ["2/2", "1/2", "2/2"] and v["judgement_correct_mean"] == 1.67
+    assert [u["id"] for u in v["unstable_events"]] == ["b"] and v["unstable_events"][0]["correct_in"] == "2/3"

@@ -100,3 +100,71 @@ def approve(run_dir: Path, base: Path = OUT_DIR) -> Path:
     })
     (run_dir / "READY_FOR_APPROVAL").rename(run_dir / "APPROVED")
     return public
+
+
+# ---------------------------------------------------------------- human review of the needs-review queue
+
+REVIEW_ACTIONS = {"accept", "not_youth", "drop"}
+
+
+def apply_review(run_dir: Path, decisions: dict[str, tuple], allowed: set[str]) -> dict:
+    """Apply a reviewer's decisions to the needs-review queue of a staged run.
+
+    decisions: event id -> ("accept", [categories]) | ("not_youth",) | ("drop",).
+    Events without a decision stay in needs_review.json. Feeds and digest are
+    rebuilt, so the run can then be approved as usual.
+    """
+    if not (run_dir / "READY_FOR_APPROVAL").exists():
+        raise RuntimeError(f"{run_dir.name} is not waiting for approval (halted, incomplete or already approved)")
+
+    def load(name):
+        path = run_dir / f"{name}.json"
+        return json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+
+    accepted, review, not_youth, rejected = load("events"), load("needs_review"), load("not_for_youth"), load("rejected")
+    report = json.loads((run_dir / "report.json").read_text(encoding="utf-8"))
+    review_ids = {e["id"] for e in review}
+
+    for ev_id, decision in decisions.items():
+        if ev_id not in review_ids:
+            raise ValueError(f"{ev_id} is not in the needs-review queue")
+        if not decision or decision[0] not in REVIEW_ACTIONS:
+            raise ValueError(f"{ev_id}: decision must be one of {sorted(REVIEW_ACTIONS)}")
+        if decision[0] == "accept":
+            cats = list(decision[1]) if len(decision) > 1 else []
+            unknown = [c for c in cats if c not in allowed]
+            if not 1 <= len(cats) <= 3 or unknown:
+                raise ValueError(f"{ev_id}: accept needs 1–3 categories from {sorted(allowed)}, got {cats}")
+
+    now_iso = datetime.now(OSLO).isoformat(timespec="seconds")
+    still_waiting, log = [], []
+    for ev in review:
+        decision = decisions.get(ev["id"])
+        if not decision:
+            still_waiting.append(ev)
+            continue
+        base = {k: v for k, v in ev.items() if k != "reasons"}
+        action = decision[0]
+        if action == "accept":
+            accepted.append({**base, "categories": list(decision[1]), "youth": "yes",
+                             "flags": base.get("flags", []) + ["accepted_in_review"]})
+        elif action == "not_youth":
+            not_youth.append({**base, "youth": "no", "flags": base.get("flags", []) + ["not_youth_in_review"]})
+        else:
+            rejected.append({**base, "reasons": ["dropped_in_review"]})
+        log.append({"id": ev["id"], "decision": action, "at": now_iso})
+
+    accepted.sort(key=lambda e: e["start"])
+    run_time = datetime.fromisoformat(report["run_time"])
+    write_outputs(run_dir, accepted, sorted(allowed), run_time)  # rewrites events.json, feeds, digest
+    _write_json(run_dir / "needs_review.json", still_waiting)
+    _write_json(run_dir / "not_for_youth.json", not_youth)
+    _write_json(run_dir / "rejected.json", rejected)
+    report["counts"].update(accepted=len(accepted), needs_review=len(still_waiting),
+                            not_for_youth=len(not_youth), rejected=len(rejected))
+    report.setdefault("review", []).extend(log)
+    _write_json(run_dir / "report.json", report)
+    return {"accepted": sum(d["decision"] == "accept" for d in log),
+            "not_youth": sum(d["decision"] == "not_youth" for d in log),
+            "dropped": sum(d["decision"] == "drop" for d in log),
+            "still_waiting": len(still_waiting)}

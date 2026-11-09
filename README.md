@@ -20,10 +20,22 @@ Requires Python 3.11+.
 ```bash
 pip install -r requirements.txt
 python -m harness run          # simulated feed, dates relative to today
-python -m harness approve      # review, then publish
+python -m harness review       # decide on events the system wasn't sure about
+python -m harness approve      # publish after review
 python -m pytest               # checks
 python -m eval.run_eval        # evaluation against labelled synthetic events
 ```
+
+Evaluation options:
+
+```bash
+python -m eval.run_eval --fixture fixtures/<test file>.json --check-only   # check labels only
+python -m eval.run_eval --fixture fixtures/<test file>.json --classifier llm
+python -m eval.run_eval --fixture fixtures/<test file>.json --classifier llm --repeat 5   # model variance
+```
+
+The labels in a fixture are always checked first; mistakes are reported per
+event (exit code 2) instead of crashing the run.
 
 Reproducible run on the saved fixture:
 
@@ -61,7 +73,7 @@ Output:
 | 4 | Dedupe | `dedupe.py` | no | Same normalized title + date + venue = duplicate |
 | 5 | Classify | `classify.py` | yes | Is it for youth (yes/no/unsure)? Which 1–3 categories? Output checked by code; rule-based fallback |
 | 6 | Stage | `publish.py` | no | Writes everything to `out/staging/`; kill switch can halt here |
-| 7 | Publish | `publish.py` | no | Only on `python -m harness approve` |
+| 7 | Publish | `publish.py` | no | Only on `python -m harness approve`. Before that, `python -m harness review` lets a person accept (with categories), mark as not for youth, or drop each event in the needs-review queue |
 
 Classifier: `--classifier auto` (default) uses Claude when `ANTHROPIC_API_KEY`
 is set in `.env`, otherwise the rule-based baseline.
@@ -84,7 +96,7 @@ baseline's score on them is not a real measurement (see `tasks/T10`).
 - **Secrets:** environment variables only (`.env`, git-ignored); never logged.
 - **Cost:** per run, at most `max_llm_calls` LLM calls and `max_total_tokens` tokens (`config.toml`); then the baseline takes over.
 - **Prompt injection:** event text is passed as data; the reply must match a strict format or it is rejected and the baseline decides.
-- **Human-in-the-loop:** nothing reaches `out/public/` without `approve`.
+- **Human-in-the-loop:** nothing reaches `out/public/` without `approve`; uncertain events wait in a review queue that a person works through with `review` (every decision is logged in the run's `report.json`).
 - **Kill switch:** if more than 50 % of collected events fail validation, or nothing is collected, the run halts and nothing is staged (exit code 2).
 
 ## Sources
