@@ -164,3 +164,69 @@ def test_no_review_after_approval(tmp_path):
     approve(run_dir, base=tmp_path)
     with pytest.raises(RuntimeError):
         apply_review(run_dir, {queue[0]["id"]: ("drop",)}, ALLOWED)
+
+
+def test_run_id_is_real_time_not_now(tmp_path):
+    """--now must not decide the run ID: otherwise an old --now run hides behind newer
+    runs in review/approve, and two runs with the same --now overwrite each other."""
+    r1, d1 = _run(tmp_path)
+    r2, d2 = _run(tmp_path)
+    assert r1["run_id"] != r2["run_id"] and d1.exists() and d2.exists()
+    assert not r1["run_id"].startswith(NOW.strftime("%Y%m%d"))
+    assert r1["run_time"] == NOW.isoformat()  # the pretend time is still recorded
+    assert latest_ready_run(tmp_path) == d2
+
+
+def test_offline_file_brings_its_own_run_time(tmp_path, monkeypatch):
+    """`harness run --offline <fixture>` without --now uses the file's _run_time,
+    so the fixed event dates are not rejected as past."""
+    import harness.__main__ as cli
+    from harness.sources import file_run_time
+    assert file_run_time(FIXTURE) == NOW.isoformat()
+    seen = []
+    monkeypatch.setattr(cli, "run", lambda cfg, now, *a, **k: seen.append(now) or {"halted": False})
+    cli.main(["run", "--offline", str(FIXTURE), "--classifier", "baseline"])
+    cli.main(["run", "--offline", str(FIXTURE), "--now", "2026-11-05T08:00:00+01:00", "--classifier", "baseline"])
+    assert seen[0] == NOW        # from the file
+    assert seen[1].day == 5      # --now still wins
+
+
+def test_raw_file_replays_with_same_run_time(tmp_path):
+    from harness.sources import file_run_time
+    report, _ = _run(tmp_path)
+    assert file_run_time(tmp_path / "raw" / f"{report['run_id']}.json") == NOW.isoformat()
+
+
+def _fake_run(base, run_id, events):
+    from harness.publish import write_outputs
+    run_dir = base / "staging" / run_id
+    write_outputs(run_dir, events, ["music", "social"], NOW)
+    (run_dir / "READY_FOR_APPROVAL").write_text("x", encoding="utf-8")
+    return run_dir
+
+
+def _ev(i, title, start, cats=("music",)):
+    return {"id": f"kn:{i}", "title": title, "start": start, "all_day": False, "venue_name": "Huset",
+            "kommune": "Hamar", "source_url": f"https://example.no/{i}", "categories": list(cats)}
+
+
+def test_approve_keeps_earlier_approved_events(tmp_path):
+    """Public = all approved upcoming events from every approved run, not just the last run."""
+    approve(_fake_run(tmp_path, "r1", [_ev(1, "Konsert", "2026-11-05T19:00:00+01:00")]), base=tmp_path, now=NOW)
+    approve(_fake_run(tmp_path, "r2", [_ev(2, "Spillkveld", "2026-11-06T18:00:00+01:00", ["social"])]),
+            base=tmp_path, now=NOW)
+    public = tmp_path / "public"
+    titles = [e["title"] for e in _load(public, "events.json")]
+    assert titles == ["Konsert", "Spillkveld"]
+    assert "Konsert" in (public / "feeds" / "music.ics").read_text(encoding="utf-8")
+    assert len(_load(public, "published.json")["runs"]) == 2
+
+
+def test_approve_newer_version_wins_and_past_events_drop(tmp_path):
+    approve(_fake_run(tmp_path, "r1", [_ev(1, "Konsert", "2026-11-05T19:00:00+01:00"),
+                                       _ev(3, "Gammel", "2026-11-03T19:00:00+01:00")]), base=tmp_path, now=NOW)
+    newer = _ev(9, "konsert!", "2026-11-05T20:00:00+01:00")  # same title, date and venue -> same event
+    later = NOW.replace(day=4)
+    approve(_fake_run(tmp_path, "r2", [newer]), base=tmp_path, now=later)
+    events = _load(tmp_path / "public", "events.json")
+    assert [e["id"] for e in events] == ["kn:9"]  # newer version kept once, the 3 Nov event is past

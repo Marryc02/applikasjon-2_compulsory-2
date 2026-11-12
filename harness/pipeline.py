@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .classify import BaselineClassifier, LLMClassifier, classify_all, load_categories
-from .config import OUT_DIR, get_secret
+from .config import OSLO, OUT_DIR, get_secret
 from .dedupe import dedupe
 from .privacy import strip_pii
 from .publish import stage_run
@@ -15,17 +15,29 @@ from .sources.kulturnett import normalize
 from .validate import validate_classification, validate_event
 
 
+def _new_run_id(base: Path) -> str:
+    """Run ID = the real clock time when the run starts, also when --now pretends
+    another time (that one is kept as run_time in report.json). So the newest run
+    always has the highest ID, which is what review and approve pick by default."""
+    stamp = datetime.now(OSLO).strftime("%Y%m%d-%H%M%S")
+    run_id, n = stamp, 2
+    while (base / "staging" / run_id).exists() or (base / "raw" / f"{run_id}.json").exists():
+        run_id, n = f"{stamp}-{n}", n + 1  # two runs in the same second
+    return run_id
+
+
 def run(cfg: dict, now: datetime, source: str = "synthetic", offline_file: Path | None = None,
         classifier: str = "auto", base: Path = OUT_DIR, log=print) -> dict:
-    run_id = now.strftime("%Y%m%d-%H%M%S")
+    run_id = _new_run_id(base)
     allowed, categories_text = load_categories()
 
     # 1. Collect
     raw, source_desc = collect(source, cfg, now, offline_file)
     raw_dir = base / "raw"
     raw_dir.mkdir(parents=True, exist_ok=True)
-    # Saved as {"events": [...]}, so it can be copied to fixtures/testing/ and replayed with --offline.
-    saved = {"_comment": f"Collected from {source_desc} at {now.isoformat()}", "events": raw}
+    # Saved as {"events": [...]}, so it can be copied to fixtures/testing/ and replayed with --offline (same run time).
+    saved = {"_comment": f"Collected from {source_desc} at {now.isoformat()}",
+             "_run_time": now.isoformat(), "events": raw}
     (raw_dir / f"{run_id}.json").write_text(json.dumps(saved, ensure_ascii=False, indent=1), encoding="utf-8")
     log(f"[1 collect]   {len(raw)} events from {source_desc}")
 

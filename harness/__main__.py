@@ -18,7 +18,7 @@ from .config import OSLO, OUT_DIR, load_config, load_dotenv
 from .pipeline import run
 from .classify import load_categories
 from .publish import apply_review, approve, latest_ready_run
-from .sources import SourceUnavailable
+from .sources import SourceUnavailable, file_run_time
 from .sources.synthetic import generate
 
 
@@ -56,7 +56,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "run":
         cfg = load_config(args.config)
         try:
-            report = run(cfg, _parse_now(args.now), args.source or cfg["source"]["default"],
+            now_text = args.now
+            if now_text is None and args.offline:
+                now_text = file_run_time(Path(args.offline))
+                if now_text:
+                    print(f"Run time from the file: {now_text} (use --now to choose another)")
+            report = run(cfg, _parse_now(now_text), args.source or cfg["source"]["default"],
                          Path(args.offline) if args.offline else None, args.classifier)
         except SourceUnavailable as e:
             print(f"Stopped: {e}")
@@ -91,13 +96,17 @@ def main(argv: list[str] | None = None) -> int:
         if not args.yes and input("Publish this run? [y/N] ").strip().lower() != "y":
             print("Not published.")
             return 1
-        print(f"Published to {approve(run_dir)}")
+        public = approve(run_dir)
+        info = json.loads((public / "published.json").read_text(encoding="utf-8"))
+        print(f"Published to {public}: {info['events_published']} upcoming event(s) from "
+              f"{len(info['runs'])} approved run(s). Events that already started are left out.")
         return 0
 
     if args.cmd == "synth":
         now = _parse_now(args.now)
         data = {"_comment": f"SYNTHETIC events in the ASSUMED Kulturnett format, generated for {now.isoformat()}. "
                             "Not real events. '_expected' = the outcome a correct pipeline should produce.",
+                "_run_time": now.isoformat(),
                 "events": generate(now)}
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")

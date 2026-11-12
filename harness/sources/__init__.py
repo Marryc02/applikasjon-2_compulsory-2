@@ -41,6 +41,17 @@ def load_file(path: Path) -> list:
     return data["events"]
 
 
+def file_run_time(path: Path) -> str | None:
+    """The run time a saved file was made for (`"_run_time"`), if it has one.
+    Its event dates are fixed, so replaying it at today's date would reject them as past."""
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None  # load_file reports the problem when the run starts
+    value = data.get("_run_time") if isinstance(data, dict) else None
+    return value if isinstance(value, str) else None
+
+
 def collect(source: str, cfg: dict, now: datetime, offline_file: Path | None = None) -> tuple[list[dict], str]:
     """Return (raw records, description of where they came from)."""
     if offline_file:

@@ -72,7 +72,7 @@ def test_approved_run_shows_exactly_the_accepted_events(tmp_path):
     hidden = set()
     for name in ("rejected.json", "not_for_youth.json", "needs_review.json"):
         hidden |= _titles(run_dir / name)
-    approve(run_dir, base=tmp_path)
+    approve(run_dir, base=tmp_path, now=NOW)  # same pretend time as the run
 
     page = _page(_client(tmp_path / "public"))
     assert accepted

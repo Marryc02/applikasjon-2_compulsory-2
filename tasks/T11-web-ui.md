@@ -13,7 +13,8 @@
 - Kulturnett is dropped as a source (see "Out of scope").
 
 ## Goal
-A Norwegian web page that shows the events in the latest approved run.
+A Norwegian web page that shows all approved events that haven't happened yet
+(from every approved run; changed 12 Nov, before that only the latest run).
 
 - Reads only `out/public/` (`published.json`, `events.json`, `feeds/`).
   Never reads `out/staging/`. Shows an empty state before anything is approved.

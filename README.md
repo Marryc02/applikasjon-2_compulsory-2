@@ -46,14 +46,20 @@ event (exit code 2) instead of crashing the run.
 Reproducible run on the saved fixture:
 
 ```bash
-python -m harness run --offline fixtures/testing/kulturnett_SYNTHETIC_2026-11-02.json --now 2026-11-02T08:00:00+01:00
+python -m harness run --offline fixtures/testing/kulturnett_SYNTHETIC_2026-11-02.json
 ```
+
+A saved file can carry the run time it was made for (`"_run_time"`); `--offline`
+then uses it, so its fixed dates aren't rejected as past. `--now` overrides it.
+Files the pipeline saves in `out/raw/` include it automatically.
 
 Output:
 - `out/staging/<run_id>/`: waiting for review: `events.json`, `digest.md`,
   `feeds/*.ics`, plus `not_for_youth.json`, `needs_review.json`,
   `rejected.json`, `duplicates.json` and `report.json` (counts, reasons, kill-switch status).
-- `out/public/`: only after `approve`. This is what the public web page shows.
+- `out/public/`: every approved event that hasn't happened yet, from all approved
+  runs. Each `approve` adds a run's events (a newer version of the same event
+  replaces the older one) and drops past events. The web page and feeds are built from it.
 - `out/raw/<run_id>.json`: what was collected; can be replayed with `--offline`.
 - `out/eval/`: evaluation results.
 
@@ -84,7 +90,7 @@ Output:
 | 5 | Classify | `classify.py` | yes | Is it for youth (yes/no/unsure)? Which 1–3 categories? Output checked by code; rule-based fallback |
 | 6 | Stage | `publish.py` | no | Writes everything to `out/staging/`; kill switch can halt here |
 | 7 | Publish | `publish.py` | no | Only on `python -m harness approve`. Before that, `python -m harness review` lets a person accept (with categories), mark as not for youth, or drop each event in the needs-review queue |
-| 8 | Show | `web/` | no | The public web page shows the events of the latest approved run, read from `out/public/` |
+| 8 | Show | `web/` | no | The public web page shows all approved upcoming events, read from `out/public/` |
 
 Classifier: `--classifier auto` (default) uses Claude when `ANTHROPIC_API_KEY`
 is set in `.env`, otherwise the rule-based baseline.
@@ -100,7 +106,8 @@ python -m web                  # http://127.0.0.1:5000 (--host / --port to chang
 
 A read-only page in Norwegian for young people, showing **only approved
 events**: it reads `out/public/` (written only by `approve`) and never
-`out/staging/`. Before anything is approved it shows an empty page.
+`out/staging/`. It shows every approved event that hasn't happened yet, from
+all approved runs. Before anything is approved it shows an empty page.
 
 - Upcoming events grouped by day: time, title (links to the event's source
   page), venue, kommune, price and categories.

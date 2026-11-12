@@ -1,8 +1,9 @@
 """Stage 6 (stage) and stage 7 (publish after human approval).
 
 The pipeline never publishes by itself. It writes a run to out/staging/<run_id>/.
-A person reviews it and runs `python -m harness approve`, which copies it to
-out/public/.
+A person reviews it and runs `python -m harness approve`, which adds its events
+to out/public/. out/public/ holds every approved event that hasn't happened yet,
+from all approved runs; the web page and the feeds are built from it.
 """
 from __future__ import annotations
 
@@ -12,6 +13,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from .config import OUT_DIR, OSLO
+from .dedupe import dedupe_key
 from .ics import build_calendar
 
 DAYS_NO = ["mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag", "søndag"]
@@ -84,20 +86,62 @@ def latest_ready_run(base: Path = OUT_DIR) -> Path | None:
     return ready[-1] if ready else None
 
 
-def approve(run_dir: Path, base: Path = OUT_DIR) -> Path:
+def merge_published(old: list[dict], new: list[dict], now: datetime) -> list[dict]:
+    """All approved events, newest run first: the same event (same id, or same
+    title + date + venue) from an older run is replaced by the newer version.
+    Events that started before today are dropped."""
+    today = now.astimezone(OSLO).date()
+    merged, seen_ids, seen_keys = [], set(), set()
+    for ev in new + old:
+        if ev["id"] in seen_ids or dedupe_key(ev) in seen_keys:
+            continue
+        try:
+            if datetime.fromisoformat(ev["start"]).astimezone(OSLO).date() < today:
+                continue
+        except (KeyError, TypeError, ValueError):
+            continue
+        seen_ids.add(ev["id"])
+        seen_keys.add(dedupe_key(ev))
+        merged.append(ev)
+    return sorted(merged, key=lambda e: e["start"])
+
+
+def approve(run_dir: Path, base: Path = OUT_DIR, now: datetime | None = None) -> Path:
+    """Add an approved run to out/public/ (earlier approved events stay)."""
     if not (run_dir / "READY_FOR_APPROVAL").exists():
         raise RuntimeError(f"{run_dir.name} is not ready for approval (halted or incomplete)")
+    now = now or datetime.now(OSLO)
     public = base / "public"
+
+    def _load(path: Path, default):
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return default
+
+    old = _load(public / "events.json", [])
+    previous = _load(public / "published.json", {})
+    new = _load(run_dir / "events.json", [])
+    events = merge_published(old if isinstance(old, list) else [], new, now)
+    allowed = sorted(f.stem for f in (run_dir / "feeds").glob("*.ics") if f.stem != "all")
+
+    # Build the new public folder next to the old one, then swap, so the page
+    # never sees a half-written folder.
+    tmp = base / "public.new"
+    if tmp.exists():
+        shutil.rmtree(tmp)
+    write_outputs(tmp, events, allowed, now)
+    approved_at = now.isoformat(timespec="seconds")
+    runs = previous.get("runs", []) if isinstance(previous, dict) else []
+    _write_json(tmp / "published.json", {
+        "run_id": run_dir.name,
+        "approved_at": approved_at,
+        "runs": runs + [{"run_id": run_dir.name, "approved_at": approved_at, "events_in_run": len(new)}],
+        "events_published": len(events),
+    })
     if public.exists():
         shutil.rmtree(public)
-    public.mkdir(parents=True)
-    shutil.copy2(run_dir / "events.json", public / "events.json")
-    shutil.copy2(run_dir / "digest.md", public / "digest.md")
-    shutil.copytree(run_dir / "feeds", public / "feeds")
-    _write_json(public / "published.json", {
-        "run_id": run_dir.name,
-        "approved_at": datetime.now(OSLO).isoformat(timespec="seconds"),
-    })
+    tmp.rename(public)
     (run_dir / "READY_FOR_APPROVAL").rename(run_dir / "APPROVED")
     return public
 
