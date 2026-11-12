@@ -12,7 +12,7 @@ from harness.pipeline import run
 from harness.publish import approve, write_outputs
 from web.app import create_app
 
-FIXTURE = Path(__file__).resolve().parent.parent / "fixtures" / "kulturnett_SYNTHETIC_2026-11-02.json"
+FIXTURE = Path(__file__).resolve().parent.parent / "fixtures" / "testing" / "kulturnett_SYNTHETIC_2026-11-02.json"
 NOW = datetime(2026, 11, 2, 8, 0, tzinfo=OSLO)
 ALLOWED = sorted(load_categories()[0])
 

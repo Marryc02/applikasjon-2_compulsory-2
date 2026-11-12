@@ -24,7 +24,7 @@ from harness.config import OSLO, OUT_DIR, ROOT, load_config, load_dotenv
 from harness.pipeline import run
 from harness.validate import REQUIRED
 
-DEFAULT_FIXTURE = ROOT / "fixtures" / "kulturnett_SYNTHETIC_2026-11-02.json"
+DEFAULT_FIXTURE = ROOT / "fixtures" / "testing" / "kulturnett_SYNTHETIC_2026-11-02.json"
 DEFAULT_NOW = "2026-11-02T08:00:00+01:00"
 OUTCOME_FILES = {"events": "accepted", "not_for_youth": "not_youth", "needs_review": "needs_review",
                  "duplicates": "duplicate", "rejected": "rejected"}

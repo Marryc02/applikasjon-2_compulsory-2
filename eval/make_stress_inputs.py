@@ -2,7 +2,7 @@
 
     python -m eval.make_stress_inputs
 
-Writes fixtures/stress/*.json. Each file simulates a way the Kulturnett source
+Writes fixtures/testing/stress/*.json. Each file simulates a way the Kulturnett source
 could misbehave. They are built from the synthetic generator (run time
 2026-11-02 08:00), so they are reproducible. All events are made up.
 """
@@ -16,7 +16,7 @@ from harness.config import OSLO, ROOT
 from harness.sources.synthetic import generate
 
 NOW = datetime(2026, 11, 2, 8, 0, tzinfo=OSLO)
-OUT = ROOT / "fixtures" / "stress"
+OUT = ROOT / "fixtures" / "testing" / "stress"
 
 
 def _valid_records() -> list[dict]:

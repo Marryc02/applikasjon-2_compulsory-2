@@ -1,5 +1,5 @@
 """Stress test 2 (dependency failure): run the pipeline on each broken source
-input in fixtures/stress/ and report what happened.
+input in fixtures/testing/stress/ and report what happened.
 
     python -m eval.stress_source
 
@@ -27,7 +27,7 @@ from harness.pipeline import run
 from harness.sources import SourceFormatError, SourceUnavailable
 
 NOW = datetime(2026, 11, 2, 8, 0, tzinfo=OSLO)
-STRESS_DIR = ROOT / "fixtures" / "stress"
+STRESS_DIR = ROOT / "fixtures" / "testing" / "stress"
 
 
 def run_case(name: str, base: Path, offline_file: Path | None = None, source: str = "synthetic") -> dict:
@@ -63,7 +63,7 @@ def main() -> int:
     out = OUT_DIR / "stress" / stamp
     cases = sorted(STRESS_DIR.glob("*.json"))
     if not cases:
-        print("No inputs in fixtures/stress/. Run: python -m eval.make_stress_inputs")
+        print("No inputs in fixtures/testing/stress/. Run: python -m eval.make_stress_inputs")
         return 2
 
     results = [run_case(p.stem, out / p.stem, offline_file=p) for p in cases]

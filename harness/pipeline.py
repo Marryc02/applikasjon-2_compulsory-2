@@ -24,7 +24,7 @@ def run(cfg: dict, now: datetime, source: str = "synthetic", offline_file: Path 
     raw, source_desc = collect(source, cfg, now, offline_file)
     raw_dir = base / "raw"
     raw_dir.mkdir(parents=True, exist_ok=True)
-    # Saved as {"events": [...]}, so it can be copied to fixtures/ and replayed with --offline.
+    # Saved as {"events": [...]}, so it can be copied to fixtures/testing/ and replayed with --offline.
     saved = {"_comment": f"Collected from {source_desc} at {now.isoformat()}", "events": raw}
     (raw_dir / f"{run_id}.json").write_text(json.dumps(saved, ensure_ascii=False, indent=1), encoding="utf-8")
     log(f"[1 collect]   {len(raw)} events from {source_desc}")

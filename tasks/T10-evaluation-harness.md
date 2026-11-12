@@ -9,7 +9,7 @@ per-category precision/recall, saved to `out/eval/`.
 
 - Labels are checked before every run (`--check-only` to check without running).
 - `--repeat N` runs a fixture N times and lists events whose result changed (model variance).
-- Human-written test sets: `fixtures/kulturnett_HUMAN_*.json`, one per group member.
+- Human-written test sets: `fixtures/testing/kulturnett_HUMAN_*.json`, one per group member.
   Classifier on these 13 judgement events: baseline 2/13, LLM 8/13 (9 Nov, one run each).
 
 ## Still to do

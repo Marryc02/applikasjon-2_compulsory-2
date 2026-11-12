@@ -25,7 +25,6 @@ pip install -r requirements.txt
 python -m harness run          # synthetic events, dates relative to today
 python -m harness review       # decide on events the system wasn't sure about
 python -m harness approve      # publish after review
-python -m web                  # public page for approved events, http://127.0.0.1:5000
 python -m pytest               # checks
 python -m eval.run_eval        # evaluation against labelled synthetic events
 python -m eval.make_stress_inputs   # stress test 2: write broken source data
@@ -35,9 +34,9 @@ python -m eval.stress_source        # stress test 2: run the pipeline on it
 Evaluation options:
 
 ```bash
-python -m eval.run_eval --fixture fixtures/<test file>.json --check-only   # check labels only
-python -m eval.run_eval --fixture fixtures/<test file>.json --classifier llm
-python -m eval.run_eval --fixture fixtures/<test file>.json --classifier llm --repeat 5   # model variance
+python -m eval.run_eval --fixture fixtures/testing/<test file>.json --check-only   # check labels only
+python -m eval.run_eval --fixture fixtures/testing/<test file>.json --classifier llm
+python -m eval.run_eval --fixture fixtures/testing/<test file>.json --classifier llm --repeat 5   # model variance
 ```
 
 The labels in a fixture are always checked first; mistakes are reported per
@@ -46,7 +45,7 @@ event (exit code 2) instead of crashing the run.
 Reproducible run on the saved fixture:
 
 ```bash
-python -m harness run --offline fixtures/kulturnett_SYNTHETIC_2026-11-02.json --now 2026-11-02T08:00:00+01:00
+python -m harness run --offline fixtures/testing/kulturnett_SYNTHETIC_2026-11-02.json --now 2026-11-02T08:00:00+01:00
 ```
 
 Output:
@@ -64,7 +63,8 @@ Output:
 | `harness/` | The workflow: stages, prompts (`harness/context/`), sources (`harness/sources/`) |
 | `tasks/` | One `.md` per task, each with an acceptance check |
 | `eval/` | Checks (pytest) and the evaluation run (`run_eval.py`) |
-| `fixtures/` | Saved inputs for offline, reproducible runs. `SYNTHETIC` = made up |
+| `fixtures/testing/` | Saved inputs for offline, reproducible runs and tests. `SYNTHETIC` = made up, `HUMAN` = written by us, `stress/` = broken data for stress test 2 |
+| `fixtures/inbox/` | Event files received from organizations. Git-ignored (may contain personal data); run with `python -m harness run --offline fixtures/inbox/<file>.json` |
 | `docs/meetings/` | Meeting reports (one per meeting) |
 | `docs/prompt-log.md` | Agent output we corrected, challenged or rejected |
 | `SPEC.md` | Problem, users, definition of success |

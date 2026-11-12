@@ -15,7 +15,7 @@ from harness.pipeline import run
 from harness.publish import approve, latest_ready_run
 from harness.sources.synthetic import generate
 
-FIXTURE = Path(__file__).resolve().parent.parent / "fixtures" / "kulturnett_SYNTHETIC_2026-11-02.json"
+FIXTURE = Path(__file__).resolve().parent.parent / "fixtures" / "testing" / "kulturnett_SYNTHETIC_2026-11-02.json"
 NOW = datetime(2026, 11, 2, 8, 0, tzinfo=OSLO)
 QUIET = dict(log=lambda *_: None)
 
@@ -119,8 +119,8 @@ ALLOWED, _ = load_categories()
 
 def _staged_with_review_queue(tmp_path):
     """A human-written fixture leaves several events in needs_review with the baseline."""
-    human = sorted((Path(__file__).resolve().parent.parent / "fixtures").glob("kulturnett_HUMAN_*.json"))
-    assert human, "no human-written fixture (fixtures/kulturnett_HUMAN_*.json) found"
+    human = sorted((Path(__file__).resolve().parent.parent / "fixtures" / "testing").glob("kulturnett_HUMAN_*.json"))
+    assert human, "no human-written fixture (fixtures/testing/kulturnett_HUMAN_*.json) found"
     fixture = human[0]
     report, run_dir = _run(tmp_path, offline_file=fixture)
     queue = _load(run_dir, "needs_review.json")
