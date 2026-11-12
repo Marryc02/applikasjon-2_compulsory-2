@@ -4,6 +4,7 @@
                           [--classifier auto|llm|baseline]
     python -m harness review [--run-id ID]             # decide on needs-review events
     python -m harness approve [--run-id ID] [--yes]
+    python -m harness unpublish [ID] [--reason TEXT] [--yes]  # take a published event down
     python -m harness synth --now ISO --out FILE      # save a synthetic fixture
 """
 from __future__ import annotations
@@ -17,7 +18,7 @@ from pathlib import Path
 from .config import OSLO, OUT_DIR, load_config, load_dotenv
 from .pipeline import run
 from .classify import load_categories
-from .publish import apply_review, approve, latest_ready_run
+from .publish import apply_review, approve, latest_ready_run, published_events, unpublish
 from .sources import SourceUnavailable, file_run_time
 from .sources.synthetic import generate
 
@@ -45,6 +46,11 @@ def main(argv: list[str] | None = None) -> int:
     a = sub.add_parser("approve", help="publish a staged run after human review")
     a.add_argument("--run-id")
     a.add_argument("--yes", action="store_true", help="skip the confirmation question")
+
+    u = sub.add_parser("unpublish", help="take one published event down and block it from coming back")
+    u.add_argument("event_id", nargs="?", help="ID of the event; leave out to list published events")
+    u.add_argument("--reason", default="", help="short note on why (no names or contact details)")
+    u.add_argument("--yes", action="store_true", help="skip the confirmation question")
 
     s = sub.add_parser("synth", help="write synthetic records (with expected labels) to a file")
     s.add_argument("--now", required=True, help="run time the dates are relative to (ISO 8601)")
@@ -102,6 +108,9 @@ def main(argv: list[str] | None = None) -> int:
               f"{len(info['runs'])} approved run(s). Events that already started are left out.")
         return 0
 
+    if args.cmd == "unpublish":
+        return _unpublish(args.event_id, args.reason, args.yes)
+
     if args.cmd == "synth":
         now = _parse_now(args.now)
         data = {"_comment": f"SYNTHETIC events in the ASSUMED Kulturnett format, generated for {now.isoformat()}. "
@@ -113,6 +122,40 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Wrote {len(data['events'])} synthetic records to {args.out}")
         return 0
     return 1
+
+
+def _unpublish(event_id: str | None, reason: str, yes: bool) -> int:
+    events = published_events(OUT_DIR)
+    if not (OUT_DIR / "public" / "published.json").exists():
+        print("Nothing is published yet.")
+        return 1
+    if not event_id:
+        if not events:
+            print("No events are published right now.")
+            return 0
+        print(f"{len(events)} published event(s):")
+        for ev in events:
+            print(f"  {ev['id']:<20} {ev['start'][:16].replace('T', ' ')}  {ev['title']}  ({ev.get('venue_name', '')})")
+        print("Take one down with: python -m harness unpublish <ID> [--reason \"...\"]")
+        return 0
+    match = [e for e in events if e.get("id") == event_id]
+    if not match:
+        print(f"{event_id} is not among the published events. "
+              "Run `python -m harness unpublish` without an ID to list them.")
+        return 1
+    ev = match[0]
+    print(f"{ev['title']}")
+    print(f"  When:  {ev['start']}{' (all day)' if ev.get('all_day') else ''}")
+    print(f"  Where: {ev.get('venue_name', '')}, {ev.get('kommune', '')}")
+    print("It will be removed from the web page, the feeds and the digest, and blocked from")
+    print("being published again (also a copy with the same title, date and venue).")
+    if not yes and input("Unpublish this event? [y/N] ").strip().lower() != "y":
+        print("Nothing changed.")
+        return 1
+    unpublish(event_id, OUT_DIR, reason=reason)
+    print(f"Unpublished {event_id}. The web page is updated now; calendar apps that subscribe")
+    print("to the feeds remove it the next time they refresh (minutes to a day, depending on the app).")
+    return 0
 
 
 def _ask_categories(allowed: set[str], current: list[str]) -> list[str]:

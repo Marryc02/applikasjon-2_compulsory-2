@@ -39,7 +39,8 @@ Never use bare `python`, `pip`, or `pytest` commands. Always prefix with `.venv\
 - Sources: only official APIs, RSS/iCal feeds, or material organizers submit themselves. No web scraping.
 - `_expected` labels are test data: they must never be read by any pipeline stage or appear in output.
 - Never change an `_expected` label to make a test or evaluation pass.
-- Nothing is published without human approval: only `python -m harness approve` writes to `out/public/`.
+- Nothing is published without human approval: only `python -m harness approve` and
+  `python -m harness unpublish` (both run by a person) write to `out/public/`.
 - Secrets live in `.env`, which is never committed or read by Claude. Copy it from
   `.env.example`. The program loads it at run time. Never print or log keys.
 - Mechanically checkable things are checked in code, not by the LLM.

@@ -25,6 +25,7 @@ pip install -r requirements.txt
 python -m harness run          # synthetic events, dates relative to today
 python -m harness review       # decide on events the system wasn't sure about
 python -m harness approve      # publish after review
+python -m harness unpublish    # list published events; add an ID to take one down
 python -m web                  # public page with the approved events: http://127.0.0.1:5000
 python -m pytest               # checks
 python -m eval.run_eval        # evaluation against labelled synthetic events
@@ -60,6 +61,10 @@ Output:
 - `out/public/`: every approved event that hasn't happened yet, from all approved
   runs. Each `approve` adds a run's events (a newer version of the same event
   replaces the older one) and drops past events. The web page and feeds are built from it.
+  `unpublish <ID>` removes one event again and logs it in `published.json`.
+- `out/blocked.json`: events a person has unpublished. Later runs reject them
+  (`unpublished_by_human`) and `approve` filters them out, matched by ID or by
+  title + date + venue.
 - `out/raw/<run_id>.json`: what was collected; can be replayed with `--offline`.
 - `out/eval/`: evaluation results.
 
@@ -89,7 +94,7 @@ Output:
 | 4 | Dedupe | `dedupe.py` | no | Same normalized title + date + venue = duplicate |
 | 5 | Classify | `classify.py` | yes | Is it for youth (yes/no/unsure)? Which 1–3 categories? Output checked by code; rule-based fallback |
 | 6 | Stage | `publish.py` | no | Writes everything to `out/staging/`; kill switch can halt here |
-| 7 | Publish | `publish.py` | no | Only on `python -m harness approve`. Before that, `python -m harness review` lets a person accept (with categories), mark as not for youth, or drop each event in the needs-review queue |
+| 7 | Publish | `publish.py` | no | Only on `python -m harness approve`. Before that, `python -m harness review` lets a person accept (with categories), mark as not for youth, or drop each event in the needs-review queue. Afterwards, `python -m harness unpublish <ID>` takes one event down and blocks it from coming back |
 | 8 | Show | `web/` | no | The public web page shows all approved upcoming events, read from `out/public/` |
 
 Classifier: `--classifier auto` (default) uses Claude when `ANTHROPIC_API_KEY`
