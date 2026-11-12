@@ -20,6 +20,8 @@ be added as a new module in `harness/sources/`.
 
 Requires Python 3.11+.
 
+Rename the file ".env.example" to ".env" and insert your own Anthropic API key.
+
 ```bash
 pip install -r requirements.txt
 python -m harness run          # synthetic events, dates relative to today
