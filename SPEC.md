@@ -24,7 +24,9 @@ The goal is to make a solution that does not involve user accounts or personal d
 
 - **Young people in Hamar (about 13–25)** looking for something to do with others.
 - **The person approving each run**, e.g. someone at a youth house or the
-  municipality's culture office. Reviews the staged run before it is published.
+  municipality's culture office. Reviews the staged run before it is published,
+  and can take a published event down again (`python -m harness unpublish`) if
+  it turns out to be a mistake.
 - **Organizations** that arrange youth activities. They can send their events
   as a file (e.g. by email); a person puts it in `fixtures/inbox/` and runs it
   with `python -m harness run --offline`, followed by review and approval as
@@ -49,12 +51,16 @@ The workflow's output is correct when, for a run:
 5. **No emails or phone numbers** appear in published output. Checked by code.
 6. **Nothing is published without human approval**, and a run with more than
    50 % invalid events is halted. Checked by tests.
+7. **A published event can be taken down by a person**, and later runs and
+   approvals don't publish it again (matched by ID, or by title, date and
+   venue). Checked by tests.
 
 Status (12 Nov 2026):
 
-- **Criteria 1, 2, 3, 5 and 6** are checked by `python -m pytest` on synthetic
+- **Criteria 1, 2, 3, 5, 6 and 7** are checked by `python -m pytest` on synthetic
   data. The web page has its own tests (`tests/test_web.py`): it shows only
-  approved events and no emails or phone numbers. Stress test 2
+  approved events and no emails or phone numbers. Unpublishing is tested in
+  `tests/test_unpublish.py`. Stress test 2
   (`python -m eval.stress_source`) checks that broken or missing source data
   stops or halts the run with a clear message, and is never staged for
   approval when more than 50 % of it is invalid.
