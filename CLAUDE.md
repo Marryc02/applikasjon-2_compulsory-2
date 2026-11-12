@@ -23,7 +23,9 @@ Never use bare `python`, `pip`, or `pytest` commands. Always prefix with `.venv\
   place categories are defined. `classify_prompt.md` is the LLM prompt.
   `event_schema.md` defines the event format and validation rules.
 - `tasks/`: one file per task with an acceptance check. Read the task file before working on a task.
+- `web/`: public, read-only Flask page for approved events (reads only `out/public/`). Run with `python -m web`.
 - `eval/`: checks (pytest) and `run_eval.py` (evaluation against labelled fixtures).
+- `tests/`: further pytest checks (e.g. the web page), kept outside `eval/`.
 - `fixtures/`: saved inputs for offline, reproducible runs. Files marked `SYNTHETIC` are made up.
 - `out/`: run output (git-ignored). `out/staging/` = waiting for approval, `out/public/` = approved.
 
