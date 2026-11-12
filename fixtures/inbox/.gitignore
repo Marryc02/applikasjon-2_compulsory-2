@@ -1,0 +1,4 @@
+# Data received from organizations. May contain personal data: never commit it.
+# Ignore everything in this folder except this file, so the folder itself stays in the repo.
+*
+!.gitignore
