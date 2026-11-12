@@ -5,17 +5,17 @@
 
 ## Problem
 
-Hamar municipality has announced their concern on the amount of young people who report being extremely lonely. 
+Hamar municipality has stated the rise of loneliness amount the youth to be a part of their main challenge. (Oversikt over folkehelsen 2023, kunnskapsgrunnlag)
 We believe that a lack of knowledge greatly exacerbates this problem. 
 Events are spread across ticketing sites, organization websites and posters, and nobody keeps a single overview aimed at youth. 
 Keeping such an overview by hand is recurring work every week.
 
 The Hamar region already has a shared event calendar ("Hva skjer", run by Kulturnett Innlandet) with over 1000 events, 
-but it is aimed at everyone, and the entire state, so youth activities are mixed in with everything else, everywhere. 
-The workflow collects events from that calendar's API (simulated with synthetic data until we get access), 
+but it is aimed at everyone, and the entire municipality, so youth activities are mixed in with everything else, everywhere. 
+Our workflow runs on synthetic events whose format is inspired by said calendar, plus files from any potential future organizations. It 
 checks that each event has the required information, removes duplicates, decides whether it is for young people, 
 sorts it into categories (music, sports, gaming, …) and, after a person approves, publishes the youth events as a filterable calendar, 
-one subscribable iCal feed per category and a weekly digest in Norwegian.
+one subscribable ics feed per category and a weekly digest in Norwegian.
 
 The goal is to make a solution that does not involve user accounts or personal data: People "follow" a category by subscribing to its feed in their own calendar app.
 
@@ -25,7 +25,10 @@ The goal is to make a solution that does not involve user accounts or personal d
 - **Young people in Hamar (about 13–25)** looking for something to do with others.
 - **The person approving each run**, e.g. someone at a youth house or the
   municipality's culture office. Reviews the staged run before it is published.
-- **Organizations** that arrange youth activities (later: by submitting events).
+- **Organizations** that arrange youth activities. They can send their events
+  as a file (e.g. by email); a person puts it in `fixtures/inbox/` and runs it
+  with `python -m harness run --offline`, followed by review and approval as
+  for any other run. 
 
 
 ## Definition of success
@@ -47,8 +50,32 @@ The workflow's output is correct when, for a run:
 6. **Nothing is published without human approval**, and a run with more than
    50 % invalid events is halted. Checked by tests.
 
-Walking-skeleton status: criteria 1, 2, 3, 5 and 6 are checked by `python -m pytest`
-on synthetic data. Criteria 4 and 4b are measured by `python -m eval.run_eval` on 22
-synthetic events, but those labels were written together with the baseline
-classifier, so the score is not yet meaningful. Independent, human-written test
-events are needed.
+Status (12 Nov 2026):
+
+- **Criteria 1, 2, 3, 5 and 6** are checked by `python -m pytest` on synthetic
+  data. The web page has its own tests (`tests/test_web.py`): it shows only
+  approved events and no emails or phone numbers. Stress test 2
+  (`python -m eval.stress_source`) checks that broken or missing source data
+  stops or halts the run with a clear message, and is never staged for
+  approval when more than 50 % of it is invalid.
+- **Criteria 4 and 4b** are measured by `python -m eval.run_eval` on two
+  human-written test sets (one per group member, 13 events that need
+  judgement). The 22 synthetic events are not used for this, because they were
+  written together with the baseline classifier.
+  - Claude Haiku got the expected outcome on 8 of 13 judgement events; the
+    keyword baseline on 2 of 13. Events decided by code rules: 8 of 8 for both
+    (9 Nov).
+  - Stress test 1 ran each test set 5 times: some answers change between
+    runs. The model is now asked twice, and an event goes to review when the
+    two answers disagree about the audience. Final run on test set 2: mean
+    4.2 of 7. No harmful event was published in any run.
+  - Stress test 2 fed the pipeline 9 kinds of broken source data and an
+    unreachable source. At first, 2 cases crashed and the halt messages
+    didn't say why. Unreadable data now stops with a clear message, broken
+    records are rejected one by one, and every halt names its main reason.
+    0 crashes in the regression run, and only the half-broken case was
+    staged for approval.
+  - One event was published against its label in the 9 Nov runs: a trampoline
+    park, labelled not for youth.
+  - The test sets are small, so these numbers are indications. They will be
+    updated after the final evaluation run.
