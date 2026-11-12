@@ -110,7 +110,7 @@ python -m web                  # http://127.0.0.1:5000 (--host / --port to chang
 ```
 
 A read-only page in Norwegian for young people, showing **only approved
-events**: it reads `out/public/` (written only by `approve`) and never
+events**: it reads `out/public/` (written only by `approve` and `unpublish`) and never
 `out/staging/`. It shows every approved event that hasn't happened yet, from
 all approved runs. Before anything is approved it shows an empty page.
 
@@ -121,7 +121,7 @@ all approved runs. Before anything is approved it shows an empty page.
   (`/feeds/<category>.ics`, `/feeds/all.ics`).
 - No accounts, no cookies, no tracking. Descriptions are run through the
   privacy filter once more before they are shown.
-- Admin (review and approve) stays on the command line.
+- Admin (review, approve, unpublish) stays on the command line.
 - Uses Flask's development server and listens only on your own computer by
   default; real hosting would need a proper web server.
 
@@ -131,9 +131,9 @@ it then goes through review and approval like any other run.
 
 ## Synthetic data
 
-`harness/sources/synthetic.py` makes 22 events per run: 10 youth events, 3 for
-other audiences, 1 unclear, 1 duplicate and 7 that must be rejected (one also
-contains contact details, one a prompt-injection attempt). Each carries an
+`harness/sources/synthetic.py` makes 22 events per run: 10 youth events (one
+with contact details that must be removed, one with a prompt-injection attempt),
+3 for other audiences, 1 unclear, 1 duplicate and 7 that must be rejected. Each carries an
 `_expected` label used by `eval/run_eval.py` and dropped before the pipeline sees it.
 **The events, labels and baseline keywords were all written by Claude**, so the
 baseline's score on them is not a real measurement (see `tasks/T10`).
@@ -144,7 +144,7 @@ baseline's score on them is not a real measurement (see `tasks/T10`).
 - **Secrets:** environment variables only (`.env`, git-ignored); never logged.
 - **Cost:** per run, at most `max_llm_calls` LLM calls and `max_total_tokens` tokens (`config.toml`); then the baseline takes over.
 - **Prompt injection:** event text is passed as data; the reply must match a strict format or it is rejected and the baseline decides.
-- **Human-in-the-loop:** nothing reaches `out/public/` without `approve`; uncertain events wait in a review queue that a person works through with `review` (every decision is logged in the run's `report.json`).
+- **Human-in-the-loop:** nothing reaches `out/public/` without `approve`; uncertain events wait in a review queue that a person works through with `review` (every decision is logged in the run's `report.json`); a published event can be taken down again with `unpublish`, and later runs won't publish it again.
 - **Kill switch:** if more than 50 % of collected events fail validation, or nothing is collected, the run halts and nothing is staged (exit code 2). The message names the most common reason, e.g. a missing field or the wrong region.
 
 ## Sources

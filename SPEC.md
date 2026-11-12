@@ -1,17 +1,17 @@
 # Spec
 
-**Early draft written alongside Claude, based on discussions between groupmates.**
+**Written alongside Claude, based on discussions between groupmates. Last updated 12 Nov 2026.**
 
 
 ## Problem
 
-Hamar municipality has stated the rise of loneliness amount the youth to be a part of their main challenge. (Oversikt over folkehelsen 2023, kunnskapsgrunnlag)
+Hamar municipality has stated the rise of loneliness amongst the youth to be a part of their main challenge. (Oversikt over folkehelsen 2023, kunnskapsgrunnlag)
 We believe that a lack of knowledge greatly exacerbates this problem. 
 Events are spread across ticketing sites, organization websites and posters, and nobody keeps a single overview aimed at youth. 
 Keeping such an overview by hand is recurring work every week.
 
 The Hamar region already has a shared event calendar ("Hva skjer", run by Kulturnett Innlandet) with over 1000 events, 
-but it is aimed at everyone, and the entire municipality, so youth activities are mixed in with everything else, everywhere. 
+but it is aimed at everyone, and the entire county, so youth activities are mixed in with everything else, everywhere. 
 Our workflow runs on synthetic events whose format is inspired by said calendar, plus files from any potential future organizations. It 
 checks that each event has the required information, removes duplicates, decides whether it is for young people, 
 sorts it into categories (music, sports, gaming, …) and, after a person approves, publishes the youth events as a filterable calendar, 
@@ -60,10 +60,12 @@ Status (12 Nov 2026):
 - **Criteria 1, 2, 3, 5, 6 and 7** are checked by `python -m pytest` on synthetic
   data. The web page has its own tests (`tests/test_web.py`): it shows only
   approved events and no emails or phone numbers. Unpublishing is tested in
-  `tests/test_unpublish.py`. Stress test 2
-  (`python -m eval.stress_source`) checks that broken or missing source data
-  stops or halts the run with a clear message, and is never staged for
-  approval when more than 50 % of it is invalid.
+  `tests/test_unpublish.py`. Stress test 2 (`python -m eval.stress_source`)
+  fed the pipeline 9 kinds of broken source data and an unreachable source.
+  At first, 2 cases crashed and the halt messages didn't say why. Now
+  unreadable data stops with a clear message, broken records are rejected one
+  by one, and every halt names its main reason. The regression run had 0
+  crashes, and only the half-broken case was staged for approval.
 - **Criteria 4 and 4b** are measured by `python -m eval.run_eval` on two
   human-written test sets (one per group member, 13 events that need
   judgement). The 22 synthetic events are not used for this, because they were
@@ -75,12 +77,6 @@ Status (12 Nov 2026):
     runs. The model is now asked twice, and an event goes to review when the
     two answers disagree about the audience. Final run on test set 2: mean
     4.2 of 7. No harmful event was published in any run.
-  - Stress test 2 fed the pipeline 9 kinds of broken source data and an
-    unreachable source. At first, 2 cases crashed and the halt messages
-    didn't say why. Unreadable data now stops with a clear message, broken
-    records are rejected one by one, and every halt names its main reason.
-    0 crashes in the regression run, and only the half-broken case was
-    staged for approval.
   - One event was published against its label in the 9 Nov runs: a trampoline
     park, labelled not for youth.
   - The test sets are small, so these numbers are indications. They will be
