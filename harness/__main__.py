@@ -59,7 +59,7 @@ def main(argv: list[str] | None = None) -> int:
             report = run(cfg, _parse_now(args.now), args.source or cfg["source"]["default"],
                          Path(args.offline) if args.offline else None, args.classifier)
         except SourceUnavailable as e:
-            print(f"Source unavailable: {e}")
+            print(f"Stopped: {e}")
             return 3
         return 2 if report["halted"] else 0
 

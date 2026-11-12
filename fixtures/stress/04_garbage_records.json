@@ -1,0 +1,55 @@
+{
+ "_comment": "Some records are not objects at all.",
+ "events": [
+  "Konsert",
+  42,
+  null,
+  [
+   "a",
+   "b"
+  ],
+  {
+   "id": "syn2026110201",
+   "tittel": "Åpen scene for unge musikere",
+   "beskrivelse": "Spill en låt eller to foran et vennlig publikum. Alle sjangre er velkomne.",
+   "start": "2026-11-05T18:00:00+01:00",
+   "heldags": false,
+   "sted": {
+    "navn": "Hamar kulturhus",
+    "adresse": "Torggata 100",
+    "postnummer": "2317",
+    "kommune": "Hamar",
+    "lat": 60.7949,
+    "lon": 11.0669
+   },
+   "kategorier": [
+    "Konsert",
+    "Ungdom"
+   ],
+   "arrangor": "Eksempelarrangør (syntetisk)",
+   "pris": "Gratis",
+   "url": "https://synthetic.example/hva-skjer/syn2026110201",
+   "status": "publisert"
+  },
+  {
+   "id": "syn2026110202",
+   "tittel": "LAN-kveld på ungdomshuset",
+   "beskrivelse": "Ta med PC eller konsoll. 13–18 år. Vi spanderer pizza.",
+   "start": "2026-11-06T17:00:00+01:00",
+   "heldags": false,
+   "sted": {
+    "navn": "Ungdomshuset Høbben",
+    "adresse": "Hamar sentrum",
+    "postnummer": "2317",
+    "kommune": "Hamar"
+   },
+   "kategorier": [
+    "Ungdom"
+   ],
+   "arrangor": "Eksempelarrangør (syntetisk)",
+   "pris": "Gratis",
+   "url": "https://synthetic.example/hva-skjer/syn2026110202",
+   "status": "publisert"
+  }
+ ]
+}

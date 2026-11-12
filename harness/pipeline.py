@@ -8,6 +8,7 @@ from pathlib import Path
 from .classify import BaselineClassifier, LLMClassifier, classify_all, load_categories
 from .config import OUT_DIR, get_secret
 from .dedupe import dedupe
+from .privacy import strip_pii
 from .publish import stage_run
 from .sources import collect
 from .sources.kulturnett import normalize
@@ -28,12 +29,24 @@ def run(cfg: dict, now: datetime, source: str = "synthetic", offline_file: Path 
     (raw_dir / f"{run_id}.json").write_text(json.dumps(saved, ensure_ascii=False, indent=1), encoding="utf-8")
     log(f"[1 collect]   {len(raw)} events from {source_desc}")
 
-    # 2. Normalize (drops test labels such as _expected)
-    events = [normalize(r) for r in raw]
-    log(f"[2 normalize] {len(events)} events, {sum('pii_removed' in e['flags'] for e in events)} had contact info removed")
+    # 2. Normalize (drops test labels such as _expected). A record that isn't an
+    # event at all is rejected on its own instead of crashing the run (repair R2).
+    events, invalid = [], []
+    for i, rec in enumerate(raw, start=1):
+        try:
+            if not isinstance(rec, dict):
+                raise TypeError(f"a {type(rec).__name__}, not an event")
+            events.append(normalize(rec))
+        except Exception as e:
+            invalid.append({"id": f"invalid-record-{i}", "reasons": ["invalid_record"],
+                            "detail": f"record #{i} is {e}" if isinstance(e, TypeError) else
+                                      f"record #{i} could not be read: {type(e).__name__}: {e}",
+                            "preview": strip_pii(repr(rec)[:120])[0], "flags": []})
+    log(f"[2 normalize] {len(events)} events, {len(invalid)} unreadable records rejected, "
+        f"{sum('pii_removed' in e['flags'] for e in events)} had contact info removed")
 
     # 3. Validate
-    valid, rejected = [], []
+    valid, rejected = [], list(invalid)
     for ev in events:
         reasons = validate_event(ev, cfg, now)
         (rejected.append({**ev, "reasons": reasons}) if reasons else valid.append(ev))
@@ -41,12 +54,13 @@ def run(cfg: dict, now: datetime, source: str = "synthetic", offline_file: Path 
 
     # Kill switch: a flood of invalid events means something upstream is broken
     # (format change, bad config, wrong area). Stop instead of publishing.
-    reject_ratio = len(rejected) / len(events) if events else 1.0
+    total = len(raw)
+    reject_ratio = len(rejected) / total if total else 1.0
     halted_reason = None
-    if len(events) < cfg["safety"]["min_events_collected"]:
+    if total < cfg["safety"]["min_events_collected"]:
         halted_reason = "too_few_events_collected"
     elif reject_ratio > cfg["safety"]["max_reject_ratio"]:
-        halted_reason = f"reject_ratio {reject_ratio:.2f} > {cfg['safety']['max_reject_ratio']}"
+        halted_reason = _explain_halt(rejected, total, reject_ratio, cfg["safety"]["max_reject_ratio"])
 
     # 4. Dedupe
     unique, duplicates = dedupe(valid)
@@ -93,11 +107,30 @@ def run(cfg: dict, now: datetime, source: str = "synthetic", offline_file: Path 
                "needs_review": needs_review}
     run_dir = stage_run(run_id, accepted, outputs, report, sorted(allowed), now, base)
     if halted_reason:
-        log(f"[6 stage]     HALTED by kill switch: {halted_reason}. Nothing staged for approval.")
+        log(f"[6 stage]     HALTED by kill switch: {halted_reason.rstrip('.')}. Nothing staged for approval.")
     else:
         log(f"[6 stage]     staged in {run_dir}")
         log("              review it, then run: python -m harness approve")
     return report
+
+
+def _explain_halt(rejected: list[dict], total: int, ratio: float, limit: float) -> str:
+    """Kill-switch message that names the most common reason (repair R3)."""
+    counts: dict[str, int] = {}
+    for ev in rejected:
+        for r in ev["reasons"]:
+            counts[r] = counts.get(r, 0) + 1
+    reason, n = max(counts.items(), key=lambda kv: kv[1])
+    share = n / total
+    msg = (f"{ratio:.0%} of events were rejected (limit {limit:.0%}). "
+           f"Most common reason: {reason} ({share:.0%} of events).")
+    if reason == "invalid_record":
+        msg += " The source sent records that aren't events."
+    elif share >= 0.9 and (reason.startswith("missing_field") or reason == "invalid_start"):
+        msg += " The source may have changed its format."
+    elif share >= 0.9 and reason == "outside_area":
+        msg += " The source may be sending events for the wrong region."
+    return msg  # the log line adds "Nothing staged for approval."
 
 
 def _count_reasons(rejected: list[dict]) -> dict:

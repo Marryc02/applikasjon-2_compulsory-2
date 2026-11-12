@@ -39,7 +39,8 @@ LABEL_KEYS = {
     "rejected": {"outcome", "reason"},
 }
 REJECT_REASONS = {f"missing_field:{f}" for f in REQUIRED} | {
-    "invalid_url", "status_not_active", "invalid_start", "in_past", "too_far_ahead", "outside_area"}
+    "invalid_url", "status_not_active", "invalid_start", "in_past", "too_far_ahead", "outside_area",
+    "invalid_record"}
 
 
 # ---------------------------------------------------------------- label check

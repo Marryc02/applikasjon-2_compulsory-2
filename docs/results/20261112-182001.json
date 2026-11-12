@@ -1,0 +1,196 @@
+[
+  {
+    "case": "01_empty",
+    "status": "halted",
+    "message": "too_few_events_collected",
+    "counts": {
+      "collected": 0,
+      "valid": 0,
+      "rejected": 0,
+      "duplicates": 0,
+      "accepted": 0,
+      "not_for_youth": 0,
+      "needs_review": 0
+    },
+    "staged_for_approval": false,
+    "accepted_staged": 0,
+    "log": [
+      "[1 collect]   0 events from file:01_empty.json",
+      "[2 normalize] 0 events, 0 had contact info removed",
+      "[3 validate]  0 valid, 0 rejected",
+      "[4 dedupe]    0 unique, 0 duplicates removed",
+      "[5 classify]  by skipped: 0 for youth, 0 not for youth, 0 need review",
+      "[6 stage]     HALTED by kill switch: too_few_events_collected. Nothing staged for approval."
+    ]
+  },
+  {
+    "case": "02_not_json",
+    "status": "CRASH",
+    "message": "JSONDecodeError: Unterminated string starting at: line 1 column 56 (char 55)",
+    "traceback": "Traceback (most recent call last):\n  File \"D:\\Skole\\Bachelor i Kunstig Intelligens\\Applikasjon 2\\applikasjon-2_compulsory-2\\eval\\stress_source.py\", line 38, in run_case\n    report = run(load_config(), NOW, source=source, offline_file=offline_file,\n                 classifier=\"baseline\", base=base, log=print)\n  File \"D:\\Skole\\Bachelor i Kunstig Intelligens\\Applikasjon 2\\applikasjon-2_compulsory-2\\harness\\pipeline.py\", line 23, in run\n    raw, source_desc = collect(source, cfg, now, offline_file)\n                       ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Skole\\Bachelor i Kunstig Intelligens\\Applikasjon 2\\applikasjon-2_compulsory-2\\harness\\sources\\__init__.py\", line 23, in collect\n    return load_file(offline_file), f\"file:{Path(offline_file).name}\"\n           ~~~~~~~~~^^^^^^^^^^^^^^\njson.decoder.JSONDecodeError: Unterminated string starting at: line 1 column 56 (char 55)\n",
+    "staged_for_approval": false,
+    "log": []
+  },
+  {
+    "case": "03_wrong_wrapper",
+    "status": "halted",
+    "message": "too_few_events_collected",
+    "counts": {
+      "collected": 0,
+      "valid": 0,
+      "rejected": 0,
+      "duplicates": 0,
+      "accepted": 0,
+      "not_for_youth": 0,
+      "needs_review": 0
+    },
+    "staged_for_approval": false,
+    "accepted_staged": 0,
+    "log": [
+      "[1 collect]   0 events from file:03_wrong_wrapper.json",
+      "[2 normalize] 0 events, 0 had contact info removed",
+      "[3 validate]  0 valid, 0 rejected",
+      "[4 dedupe]    0 unique, 0 duplicates removed",
+      "[5 classify]  by skipped: 0 for youth, 0 not for youth, 0 need review",
+      "[6 stage]     HALTED by kill switch: too_few_events_collected. Nothing staged for approval."
+    ]
+  },
+  {
+    "case": "04_garbage_records",
+    "status": "CRASH",
+    "message": "AttributeError: 'str' object has no attribute 'get'",
+    "traceback": "Traceback (most recent call last):\n  File \"D:\\Skole\\Bachelor i Kunstig Intelligens\\Applikasjon 2\\applikasjon-2_compulsory-2\\eval\\stress_source.py\", line 38, in run_case\n    report = run(load_config(), NOW, source=source, offline_file=offline_file,\n                 classifier=\"baseline\", base=base, log=print)\n  File \"D:\\Skole\\Bachelor i Kunstig Intelligens\\Applikasjon 2\\applikasjon-2_compulsory-2\\harness\\pipeline.py\", line 32, in run\n    events = [normalize(r) for r in raw]\n              ~~~~~~~~~^^^\n  File \"D:\\Skole\\Bachelor i Kunstig Intelligens\\Applikasjon 2\\applikasjon-2_compulsory-2\\harness\\sources\\kulturnett.py\", line 52, in normalize\n    sted = rec.get(\"sted\") or {}\n           ^^^^^^^\nAttributeError: 'str' object has no attribute 'get'\n",
+    "staged_for_approval": false,
+    "log": [
+      "[1 collect]   6 events from file:04_garbage_records.json"
+    ]
+  },
+  {
+    "case": "05_renamed_fields",
+    "status": "halted",
+    "message": "reject_ratio 1.00 > 0.5",
+    "counts": {
+      "collected": 14,
+      "valid": 0,
+      "rejected": 14,
+      "duplicates": 0,
+      "accepted": 0,
+      "not_for_youth": 0,
+      "needs_review": 0
+    },
+    "staged_for_approval": false,
+    "accepted_staged": 0,
+    "log": [
+      "[1 collect]   14 events from file:05_renamed_fields.json",
+      "[2 normalize] 14 events, 1 had contact info removed",
+      "[3 validate]  0 valid, 14 rejected",
+      "[4 dedupe]    0 unique, 0 duplicates removed",
+      "[5 classify]  by skipped: 0 for youth, 0 not for youth, 0 need review",
+      "[6 stage]     HALTED by kill switch: reject_ratio 1.00 > 0.5. Nothing staged for approval."
+    ]
+  },
+  {
+    "case": "06_norwegian_dates",
+    "status": "halted",
+    "message": "reject_ratio 0.93 > 0.5",
+    "counts": {
+      "collected": 14,
+      "valid": 1,
+      "rejected": 13,
+      "duplicates": 0,
+      "accepted": 0,
+      "not_for_youth": 0,
+      "needs_review": 1
+    },
+    "staged_for_approval": false,
+    "accepted_staged": 0,
+    "log": [
+      "[1 collect]   14 events from file:06_norwegian_dates.json",
+      "[2 normalize] 14 events, 1 had contact info removed",
+      "[3 validate]  1 valid, 13 rejected",
+      "[4 dedupe]    1 unique, 0 duplicates removed",
+      "[5 classify]  by skipped: 0 for youth, 0 not for youth, 1 need review",
+      "[6 stage]     HALTED by kill switch: reject_ratio 0.93 > 0.5. Nothing staged for approval."
+    ]
+  },
+  {
+    "case": "07_wrong_region",
+    "status": "halted",
+    "message": "reject_ratio 1.00 > 0.5",
+    "counts": {
+      "collected": 14,
+      "valid": 0,
+      "rejected": 14,
+      "duplicates": 0,
+      "accepted": 0,
+      "not_for_youth": 0,
+      "needs_review": 0
+    },
+    "staged_for_approval": false,
+    "accepted_staged": 0,
+    "log": [
+      "[1 collect]   14 events from file:07_wrong_region.json",
+      "[2 normalize] 14 events, 1 had contact info removed",
+      "[3 validate]  0 valid, 14 rejected",
+      "[4 dedupe]    0 unique, 0 duplicates removed",
+      "[5 classify]  by skipped: 0 for youth, 0 not for youth, 0 need review",
+      "[6 stage]     HALTED by kill switch: reject_ratio 1.00 > 0.5. Nothing staged for approval."
+    ]
+  },
+  {
+    "case": "08_mostly_missing_dates",
+    "status": "halted",
+    "message": "reject_ratio 0.64 > 0.5",
+    "counts": {
+      "collected": 14,
+      "valid": 5,
+      "rejected": 9,
+      "duplicates": 0,
+      "accepted": 0,
+      "not_for_youth": 0,
+      "needs_review": 5
+    },
+    "staged_for_approval": false,
+    "accepted_staged": 0,
+    "log": [
+      "[1 collect]   14 events from file:08_mostly_missing_dates.json",
+      "[2 normalize] 14 events, 1 had contact info removed",
+      "[3 validate]  5 valid, 9 rejected",
+      "[4 dedupe]    5 unique, 0 duplicates removed",
+      "[5 classify]  by skipped: 0 for youth, 0 not for youth, 5 need review",
+      "[6 stage]     HALTED by kill switch: reject_ratio 0.64 > 0.5. Nothing staged for approval."
+    ]
+  },
+  {
+    "case": "09_half_missing_dates",
+    "status": "completed",
+    "message": "",
+    "counts": {
+      "collected": 14,
+      "valid": 7,
+      "rejected": 7,
+      "duplicates": 0,
+      "accepted": 3,
+      "not_for_youth": 3,
+      "needs_review": 1
+    },
+    "staged_for_approval": true,
+    "accepted_staged": 3,
+    "log": [
+      "[1 collect]   14 events from file:09_half_missing_dates.json",
+      "[2 normalize] 14 events, 1 had contact info removed",
+      "[3 validate]  7 valid, 7 rejected",
+      "[4 dedupe]    7 unique, 0 duplicates removed",
+      "[5 classify]  by baseline: 3 for youth, 3 not for youth, 1 need review",
+      "[6 stage]     staged in D:\\Skole\\Bachelor i Kunstig Intelligens\\Applikasjon 2\\applikasjon-2_compulsory-2\\out\\stress\\20261112-182001\\09_half_missing_dates\\staging\\20261102-080000",
+      "              review it, then run: python -m harness approve"
+    ]
+  },
+  {
+    "case": "10_source_unreachable",
+    "status": "source_unavailable",
+    "message": "Kulturnett Innlandet API access has not been granted yet. Use --source synthetic, or --offline <file> to replay saved data.",
+    "staged_for_approval": false,
+    "log": []
+  }
+]

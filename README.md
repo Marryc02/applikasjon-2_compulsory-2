@@ -7,11 +7,14 @@ sports, gaming, …) and a weekly digest in Norwegian. A person approves every
 run before anything is published. The goal is to make low-threshold social
 activities easier to find, as one small answer to youth loneliness.
 
-**Status: walking skeleton on synthetic data.** The intended source is the
-"Hva skjer" calendar from **Kulturnett Innlandet**. We have not received API
-access yet, so the pipeline runs on a **simulated Kulturnett feed**: made-up
-events in an assumed format (`harness/context/kulturnett_format.md`). When
-access arrives, only `harness/sources/kulturnett.py` should need to change.
+**Status: runs on synthetic data only.** All events are made up. Their format
+is *inspired by* the public "Hva skjer" calendar from Kulturnett Innlandet
+(described in `harness/context/kulturnett_format.md`), but this project does
+**not** use Kulturnett Innlandet as a data source and contains none of their
+data. We dropped Kulturnett as a source because of legal uncertainty about
+using their data. The file and option names that still say `kulturnett` refer
+to this format, not to their service. A real source (API, RSS or iCal) would
+be added as a new module in `harness/sources/`.
 
 ## Quick start
 
@@ -19,11 +22,13 @@ Requires Python 3.11+.
 
 ```bash
 pip install -r requirements.txt
-python -m harness run          # simulated feed, dates relative to today
+python -m harness run          # synthetic events, dates relative to today
 python -m harness review       # decide on events the system wasn't sure about
 python -m harness approve      # publish after review
 python -m pytest               # checks
 python -m eval.run_eval        # evaluation against labelled synthetic events
+python -m eval.make_stress_inputs   # stress test 2: write broken source data
+python -m eval.stress_source        # stress test 2: run the pipeline on it
 ```
 
 Evaluation options:
@@ -59,7 +64,7 @@ Output:
 | `tasks/` | One `.md` per task, each with an acceptance check |
 | `eval/` | Checks (pytest) and the evaluation run (`run_eval.py`) |
 | `fixtures/` | Saved inputs for offline, reproducible runs. `SYNTHETIC` = made up |
-| `docs/meetings/` | Weekly meeting reports |
+| `docs/meetings/` | Meeting reports (one per meeting) |
 | `docs/prompt-log.md` | Agent output we corrected, challenged or rejected |
 | `SPEC.md` | Problem, users, definition of success |
 
@@ -67,7 +72,7 @@ Output:
 
 | # | Stage | Code | LLM? | What it does |
 |---|---|---|---|---|
-| 1 | Collect | `sources/` | no | Simulated Kulturnett feed (or a saved file). Live Kulturnett: waiting for access |
+| 1 | Collect | `sources/` | no | Synthetic events (or a saved file). Stops with a plain message if the data can't be read |
 | 2 | Normalize | `sources/kulturnett.py` | no | Converts to the internal format; removes emails and phone numbers; drops test labels |
 | 3 | Validate | `validate.py` | no | Rejects missing fields, non-https links, cancelled, past, too far ahead, outside Hamar/Løten/Ringsaker/Stange |
 | 4 | Dedupe | `dedupe.py` | no | Same normalized title + date + venue = duplicate |
@@ -79,7 +84,7 @@ Classifier: `--classifier auto` (default) uses Claude when `ANTHROPIC_API_KEY`
 is set in `.env`, otherwise the rule-based baseline.
 
 Runs automatically every night via GitHub Actions (`.github/workflows/nightly.yml`)
-on the simulated feed, staging only, followed by an evaluation run.
+on synthetic events, staging only, followed by an evaluation run.
 
 ## Synthetic data
 
@@ -97,14 +102,14 @@ baseline's score on them is not a real measurement (see `tasks/T10`).
 - **Cost:** per run, at most `max_llm_calls` LLM calls and `max_total_tokens` tokens (`config.toml`); then the baseline takes over.
 - **Prompt injection:** event text is passed as data; the reply must match a strict format or it is rejected and the baseline decides.
 - **Human-in-the-loop:** nothing reaches `out/public/` without `approve`; uncertain events wait in a review queue that a person works through with `review` (every decision is logged in the run's `report.json`).
-- **Kill switch:** if more than 50 % of collected events fail validation, or nothing is collected, the run halts and nothing is staged (exit code 2).
+- **Kill switch:** if more than 50 % of collected events fail validation, or nothing is collected, the run halts and nothing is staged (exit code 2). The message names the most common reason, e.g. a missing field or the wrong region.
 
 ## Sources
 
 | Source | Method | Terms | Status |
 |---|---|---|---|
-| Kulturnett Innlandet, Hva skjer | API (partner access) | TODO when access is granted | Requested access: TODO (see `tasks/T08`) |
-| Simulated Kulturnett feed | `harness/sources/synthetic.py` | n/a (made up) | Used now |
+| Synthetic events (format inspired by Kulturnett Innlandet's "Hva skjer") | `harness/sources/synthetic.py` | n/a (made up, no real data) | Used |
+| Kulturnett Innlandet | – | – | **Not used.** Dropped because of legal uncertainty; only the format inspired our synthetic data |
 
 ## Related work
 
@@ -114,7 +119,7 @@ project focuses on youth and on a tested, verifiable pipeline.
 
 ## Known limitations
 
-- The Kulturnett format is assumed; the live source is not implemented yet.
+- There is no live source: the system has only been run on synthetic data.
 - Personal **names** in event text are not removed (only emails and phone numbers).
 - The baseline classifier uses simple keyword lists.
-- The LLM classifier has only been tested with a fake client.
+- The LLM classifier (Claude Haiku) has been evaluated on 13 judgement events in two test sets; the sample is small.

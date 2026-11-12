@@ -45,7 +45,7 @@ The workflow's output is correct when, for a run:
    Measured as outcome accuracy against labelled test events (`python -m eval.run_eval`).
 5. **No emails or phone numbers** appear in published output. Checked by code.
 6. **Nothing is published without human approval**, and a run with more than
-   70 % invalid events is halted. Checked by tests.
+   50 % invalid events is halted. Checked by tests.
 
 Walking-skeleton status: criteria 1, 2, 3, 5 and 6 are checked by `python -m pytest`
 on synthetic data. Criteria 4 and 4b are measured by `python -m eval.run_eval` on 22

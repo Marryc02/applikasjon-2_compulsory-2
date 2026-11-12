@@ -11,10 +11,34 @@ class SourceUnavailable(RuntimeError):
     pass
 
 
-def load_file(path: Path) -> list[dict]:
-    """Load saved records: a JSON list, or an object with an `events` list."""
-    data = json.loads(Path(path).read_text(encoding="utf-8"))
-    return data if isinstance(data, list) else data.get("events", [])
+class SourceFormatError(SourceUnavailable):
+    """The source answered, but with data the pipeline cannot read at all
+    (stress test 2, repair R1). Nothing is staged."""
+
+
+def load_file(path: Path) -> list:
+    """Load saved records: a JSON list, or an object with an `events` list.
+    Raises SourceFormatError with a plain explanation if the data is unreadable."""
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise SourceFormatError(
+            f"The source sent data that isn't valid JSON (it breaks off at line {e.lineno}, "
+            f"column {e.colno}); the download may have been cut off. Nothing was staged.") from None
+    if isinstance(data, list):
+        return data
+    if not isinstance(data, dict):
+        raise SourceFormatError(f"The source sent a {type(data).__name__} instead of a list of events. "
+                                "Nothing was staged.")
+    if "events" not in data:
+        keys = [k for k in data if not str(k).startswith("_")]
+        raise SourceFormatError(
+            f"The source's data has no 'events' list (found: {', '.join(keys) or 'nothing'}). "
+            "The source may have changed its format. Nothing was staged.")
+    if not isinstance(data["events"], list):
+        raise SourceFormatError("The source's 'events' is not a list. The source may have changed its format. "
+                                "Nothing was staged.")
+    return data["events"]
 
 
 def collect(source: str, cfg: dict, now: datetime, offline_file: Path | None = None) -> tuple[list[dict], str]:

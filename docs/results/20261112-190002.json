@@ -1,0 +1,192 @@
+[
+  {
+    "case": "01_empty",
+    "status": "halted",
+    "message": "too_few_events_collected",
+    "counts": {
+      "collected": 0,
+      "valid": 0,
+      "rejected": 0,
+      "duplicates": 0,
+      "accepted": 0,
+      "not_for_youth": 0,
+      "needs_review": 0
+    },
+    "staged_for_approval": false,
+    "accepted_staged": 0,
+    "log": [
+      "[1 collect]   0 events from file:01_empty.json",
+      "[2 normalize] 0 events, 0 unreadable records rejected, 0 had contact info removed",
+      "[3 validate]  0 valid, 0 rejected",
+      "[4 dedupe]    0 unique, 0 duplicates removed",
+      "[5 classify]  by skipped: 0 for youth, 0 not for youth, 0 need review",
+      "[6 stage]     HALTED by kill switch: too_few_events_collected. Nothing staged for approval."
+    ]
+  },
+  {
+    "case": "02_not_json",
+    "status": "source_unreadable",
+    "message": "The source sent data that isn't valid JSON (it breaks off at line 1, column 56); the download may have been cut off. Nothing was staged.",
+    "staged_for_approval": false,
+    "log": []
+  },
+  {
+    "case": "03_wrong_wrapper",
+    "status": "source_unreadable",
+    "message": "The source's data has no 'events' list (found: data). The source may have changed its format. Nothing was staged.",
+    "staged_for_approval": false,
+    "log": []
+  },
+  {
+    "case": "04_garbage_records",
+    "status": "halted",
+    "message": "67% of events were rejected (limit 50%). Most common reason: invalid_record (67% of events). The source sent records that aren't events. Nothing was staged for approval.",
+    "counts": {
+      "collected": 6,
+      "valid": 2,
+      "rejected": 4,
+      "duplicates": 0,
+      "accepted": 0,
+      "not_for_youth": 0,
+      "needs_review": 2
+    },
+    "staged_for_approval": false,
+    "accepted_staged": 0,
+    "log": [
+      "[1 collect]   6 events from file:04_garbage_records.json",
+      "[2 normalize] 2 events, 4 unreadable records rejected, 0 had contact info removed",
+      "[3 validate]  2 valid, 4 rejected",
+      "[4 dedupe]    2 unique, 0 duplicates removed",
+      "[5 classify]  by skipped: 0 for youth, 0 not for youth, 2 need review",
+      "[6 stage]     HALTED by kill switch: 67% of events were rejected (limit 50%). Most common reason: invalid_record (67% of events). The source sent records that aren't events. Nothing was staged for approval.. Nothing staged for approval."
+    ]
+  },
+  {
+    "case": "05_renamed_fields",
+    "status": "halted",
+    "message": "100% of events were rejected (limit 50%). Most common reason: missing_field:title (100% of events). The source may have changed its format. Nothing was staged for approval.",
+    "counts": {
+      "collected": 14,
+      "valid": 0,
+      "rejected": 14,
+      "duplicates": 0,
+      "accepted": 0,
+      "not_for_youth": 0,
+      "needs_review": 0
+    },
+    "staged_for_approval": false,
+    "accepted_staged": 0,
+    "log": [
+      "[1 collect]   14 events from file:05_renamed_fields.json",
+      "[2 normalize] 14 events, 0 unreadable records rejected, 1 had contact info removed",
+      "[3 validate]  0 valid, 14 rejected",
+      "[4 dedupe]    0 unique, 0 duplicates removed",
+      "[5 classify]  by skipped: 0 for youth, 0 not for youth, 0 need review",
+      "[6 stage]     HALTED by kill switch: 100% of events were rejected (limit 50%). Most common reason: missing_field:title (100% of events). The source may have changed its format. Nothing was staged for approval.. Nothing staged for approval."
+    ]
+  },
+  {
+    "case": "06_norwegian_dates",
+    "status": "halted",
+    "message": "93% of events were rejected (limit 50%). Most common reason: missing_field:start (93% of events). The source may have changed its format. Nothing was staged for approval.",
+    "counts": {
+      "collected": 14,
+      "valid": 1,
+      "rejected": 13,
+      "duplicates": 0,
+      "accepted": 0,
+      "not_for_youth": 0,
+      "needs_review": 1
+    },
+    "staged_for_approval": false,
+    "accepted_staged": 0,
+    "log": [
+      "[1 collect]   14 events from file:06_norwegian_dates.json",
+      "[2 normalize] 14 events, 0 unreadable records rejected, 1 had contact info removed",
+      "[3 validate]  1 valid, 13 rejected",
+      "[4 dedupe]    1 unique, 0 duplicates removed",
+      "[5 classify]  by skipped: 0 for youth, 0 not for youth, 1 need review",
+      "[6 stage]     HALTED by kill switch: 93% of events were rejected (limit 50%). Most common reason: missing_field:start (93% of events). The source may have changed its format. Nothing was staged for approval.. Nothing staged for approval."
+    ]
+  },
+  {
+    "case": "07_wrong_region",
+    "status": "halted",
+    "message": "100% of events were rejected (limit 50%). Most common reason: outside_area (100% of events). The source may be sending events for the wrong region. Nothing was staged for approval.",
+    "counts": {
+      "collected": 14,
+      "valid": 0,
+      "rejected": 14,
+      "duplicates": 0,
+      "accepted": 0,
+      "not_for_youth": 0,
+      "needs_review": 0
+    },
+    "staged_for_approval": false,
+    "accepted_staged": 0,
+    "log": [
+      "[1 collect]   14 events from file:07_wrong_region.json",
+      "[2 normalize] 14 events, 0 unreadable records rejected, 1 had contact info removed",
+      "[3 validate]  0 valid, 14 rejected",
+      "[4 dedupe]    0 unique, 0 duplicates removed",
+      "[5 classify]  by skipped: 0 for youth, 0 not for youth, 0 need review",
+      "[6 stage]     HALTED by kill switch: 100% of events were rejected (limit 50%). Most common reason: outside_area (100% of events). The source may be sending events for the wrong region. Nothing was staged for approval.. Nothing staged for approval."
+    ]
+  },
+  {
+    "case": "08_mostly_missing_dates",
+    "status": "halted",
+    "message": "64% of events were rejected (limit 50%). Most common reason: missing_field:start (64% of events). Nothing was staged for approval.",
+    "counts": {
+      "collected": 14,
+      "valid": 5,
+      "rejected": 9,
+      "duplicates": 0,
+      "accepted": 0,
+      "not_for_youth": 0,
+      "needs_review": 5
+    },
+    "staged_for_approval": false,
+    "accepted_staged": 0,
+    "log": [
+      "[1 collect]   14 events from file:08_mostly_missing_dates.json",
+      "[2 normalize] 14 events, 0 unreadable records rejected, 1 had contact info removed",
+      "[3 validate]  5 valid, 9 rejected",
+      "[4 dedupe]    5 unique, 0 duplicates removed",
+      "[5 classify]  by skipped: 0 for youth, 0 not for youth, 5 need review",
+      "[6 stage]     HALTED by kill switch: 64% of events were rejected (limit 50%). Most common reason: missing_field:start (64% of events). Nothing was staged for approval.. Nothing staged for approval."
+    ]
+  },
+  {
+    "case": "09_half_missing_dates",
+    "status": "completed",
+    "message": "",
+    "counts": {
+      "collected": 14,
+      "valid": 7,
+      "rejected": 7,
+      "duplicates": 0,
+      "accepted": 3,
+      "not_for_youth": 3,
+      "needs_review": 1
+    },
+    "staged_for_approval": true,
+    "accepted_staged": 3,
+    "log": [
+      "[1 collect]   14 events from file:09_half_missing_dates.json",
+      "[2 normalize] 14 events, 0 unreadable records rejected, 1 had contact info removed",
+      "[3 validate]  7 valid, 7 rejected",
+      "[4 dedupe]    7 unique, 0 duplicates removed",
+      "[5 classify]  by baseline: 3 for youth, 3 not for youth, 1 need review",
+      "[6 stage]     staged in D:\\Skole\\Bachelor i Kunstig Intelligens\\Applikasjon 2\\applikasjon-2_compulsory-2\\out\\stress\\20261112-190002\\09_half_missing_dates\\staging\\20261102-080000",
+      "              review it, then run: python -m harness approve"
+    ]
+  },
+  {
+    "case": "10_source_unreachable",
+    "status": "source_unavailable",
+    "message": "Kulturnett Innlandet API access has not been granted yet. Use --source synthetic, or --offline <file> to replay saved data.",
+    "staged_for_approval": false,
+    "log": []
+  }
+]
