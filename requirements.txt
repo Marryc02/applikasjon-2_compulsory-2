@@ -1,3 +1,4 @@
 anthropic>=0.40   # only needed for the LLM classifier
 pytest>=8
 tzdata            # zoneinfo has no system tz database on Windows
+flask>=3.1      # public web page (python -m web)

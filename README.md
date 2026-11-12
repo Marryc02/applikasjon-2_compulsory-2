@@ -25,6 +25,7 @@ pip install -r requirements.txt
 python -m harness run          # synthetic events, dates relative to today
 python -m harness review       # decide on events the system wasn't sure about
 python -m harness approve      # publish after review
+python -m web                  # public page for approved events, http://127.0.0.1:5000
 python -m pytest               # checks
 python -m eval.run_eval        # evaluation against labelled synthetic events
 python -m eval.make_stress_inputs   # stress test 2: write broken source data
