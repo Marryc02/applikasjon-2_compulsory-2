@@ -9,7 +9,7 @@ from .classify import BaselineClassifier, LLMClassifier, classify_all, load_cate
 from .config import OSLO, OUT_DIR, get_secret
 from .dedupe import dedupe
 from .privacy import strip_pii
-from .publish import stage_run
+from .publish import UNPUBLISHED, is_blocked, load_blocked, stage_run
 from .sources import collect
 from .sources.kulturnett import normalize
 from .validate import validate_classification, validate_event
@@ -77,6 +77,17 @@ def run(cfg: dict, now: datetime, source: str = "synthetic", offline_file: Path 
     # 4. Dedupe
     unique, duplicates = dedupe(valid)
     log(f"[4 dedupe]    {len(unique)} unique, {len(duplicates)} duplicates removed")
+
+    # Events a human has unpublished are not classified or staged again.
+    # (After the kill-switch check, so they don't count as a source problem.)
+    blocked_list = load_blocked(base)
+    if blocked_list:
+        kept = []
+        for ev in unique:
+            (rejected.append({**ev, "reasons": [UNPUBLISHED]}) if is_blocked(ev, blocked_list) else kept.append(ev))
+        if len(kept) < len(unique):
+            log(f"              {len(unique) - len(kept)} event(s) skipped: unpublished earlier by a human")
+        unique = kept
 
     # 5. Classify: for youth? which categories?
     baseline = BaselineClassifier(allowed)

@@ -38,3 +38,4 @@ Claude Code in the repository.
 | 12.11.2026 | jking + Claude | Scope change: UI is only a read-only public page; organizers by email (manual entry), admin stays CLI; Kulturnett dropped | `tasks/T11-web-ui.md` rewritten; no code yet |
 | 12.11.2026 | jking + Claude | Build the public page with Flask; Kulturnett cleanup postponed | `web/` + `tests/test_web.py` (15 tests), Flask added; 96 tests pass |
 | 12.11.2026 | jking + Claude | Add a kommune filter that combines with the category filter | `web/` updated, 5 new tests; 101 tests pass |
+| 2026-11-12 | jking + Claude | CLI command to take one approved event down again and keep it from being republished | `harness unpublish` + block list (`out/blocked.json`), T12, 12 tests; 125 tests pass |

@@ -15,6 +15,7 @@ from pathlib import Path
 from .config import OUT_DIR, OSLO
 from .dedupe import dedupe_key
 from .ics import build_calendar
+from .privacy import strip_pii
 
 DAYS_NO = ["mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag", "søndag"]
 MONTHS_NO = ["januar", "februar", "mars", "april", "mai", "juni", "juli",
@@ -123,27 +124,109 @@ def approve(run_dir: Path, base: Path = OUT_DIR, now: datetime | None = None) ->
     previous = _load(public / "published.json", {})
     new = _load(run_dir / "events.json", [])
     events = merge_published(old if isinstance(old, list) else [], new, now)
+    # A run staged before an event was unpublished must not bring it back.
+    blocked = load_blocked(base)
+    events = [e for e in events if not is_blocked(e, blocked)]
     allowed = sorted(f.stem for f in (run_dir / "feeds").glob("*.ics") if f.stem != "all")
 
-    # Build the new public folder next to the old one, then swap, so the page
-    # never sees a half-written folder.
-    tmp = base / "public.new"
+    approved_at = now.isoformat(timespec="seconds")
+    previous = previous if isinstance(previous, dict) else {}
+    _replace_public(base, events, allowed, now, {
+        **previous,
+        "run_id": run_dir.name,
+        "approved_at": approved_at,
+        "runs": previous.get("runs", []) + [{"run_id": run_dir.name, "approved_at": approved_at,
+                                             "events_in_run": len(new)}],
+        "events_published": len(events),
+    })
+    (run_dir / "READY_FOR_APPROVAL").rename(run_dir / "APPROVED")
+    return public
+
+
+def _replace_public(base: Path, events: list[dict], allowed: list[str], now: datetime, info: dict) -> None:
+    """Build the new public folder next to the old one, then swap, so the page
+    never sees a half-written folder."""
+    public, tmp = base / "public", base / "public.new"
     if tmp.exists():
         shutil.rmtree(tmp)
     write_outputs(tmp, events, allowed, now)
-    approved_at = now.isoformat(timespec="seconds")
-    runs = previous.get("runs", []) if isinstance(previous, dict) else []
-    _write_json(tmp / "published.json", {
-        "run_id": run_dir.name,
-        "approved_at": approved_at,
-        "runs": runs + [{"run_id": run_dir.name, "approved_at": approved_at, "events_in_run": len(new)}],
-        "events_published": len(events),
-    })
+    _write_json(tmp / "published.json", info)
     if public.exists():
         shutil.rmtree(public)
     tmp.rename(public)
-    (run_dir / "READY_FOR_APPROVAL").rename(run_dir / "APPROVED")
-    return public
+
+
+# ---------------------------------------------------------------- unpublish + block list
+#
+# A human can take one published event down again (`python -m harness unpublish`).
+# The event is also put on a block list (out/blocked.json), so later runs and
+# approvals don't publish it again: the pipeline rejects it with the reason
+# UNPUBLISHED, and approve() filters it out of runs staged before the unpublish.
+
+UNPUBLISHED = "unpublished_by_human"
+
+
+def _blocked_path(base: Path) -> Path:
+    return base / "blocked.json"
+
+
+def load_blocked(base: Path = OUT_DIR) -> list[dict]:
+    try:
+        data = json.loads(_blocked_path(base).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    return data if isinstance(data, list) else []
+
+
+def is_blocked(ev: dict, blocked: list[dict]) -> bool:
+    """Same id, or same title + date + venue as a blocked event (so a copy of
+    it with a new id, e.g. sent in again, is caught too)."""
+    key = list(dedupe_key(ev))
+    return any(b.get("id") == ev.get("id") or b.get("key") == key for b in blocked)
+
+
+def published_events(base: Path = OUT_DIR) -> list[dict]:
+    try:
+        data = json.loads((base / "public" / "events.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    return data if isinstance(data, list) else []
+
+
+def unpublish(event_id: str, base: Path = OUT_DIR, now: datetime | None = None, reason: str = "") -> dict:
+    """Remove one event from out/public/, rebuild feeds and digest, and block it
+    from being published again. Returns the removed event."""
+
+    public = base / "public"
+    if not (public / "published.json").exists():
+        raise RuntimeError("Nothing is published yet.")
+    events = published_events(base)
+    match = [e for e in events if e.get("id") == event_id]
+    if not match:
+        raise ValueError(f"{event_id} is not among the published events")
+    removed = match[0]
+    now = now or datetime.now(OSLO)
+    at = now.isoformat(timespec="seconds")
+    reason = strip_pii(reason.strip())[0]  # free text: keep contact details out of the log
+
+    entry = {"id": removed["id"], "key": list(dedupe_key(removed)), "title": removed.get("title", ""),
+             "start": removed.get("start", ""), "venue_name": removed.get("venue_name", ""),
+             "unpublished_at": at, "reason": reason}
+    blocked = load_blocked(base)
+    _blocked_path(base).parent.mkdir(parents=True, exist_ok=True)
+    _write_json(_blocked_path(base), blocked + [entry])
+
+    remaining = [e for e in events if e.get("id") != event_id]
+    allowed = sorted(f.stem for f in (public / "feeds").glob("*.ics") if f.stem != "all")
+    info = json.loads((public / "published.json").read_text(encoding="utf-8"))
+    info = info if isinstance(info, dict) else {}
+    _replace_public(base, remaining, allowed, now, {
+        **info,
+        "events_published": len(remaining),
+        "unpublished": info.get("unpublished", []) + [
+            {"id": removed["id"], "title": removed.get("title", ""), "at": at, "reason": reason}],
+    })
+    return removed
 
 
 # ---------------------------------------------------------------- human review of the needs-review queue
