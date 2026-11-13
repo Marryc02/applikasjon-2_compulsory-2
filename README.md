@@ -158,9 +158,13 @@ baseline's score on them is not a real measurement (see `tasks/T10`).
 
 ## Related work
 
-koigenhamar.no collects Hamar events nightly from open sources and cleans,
-de-duplicates and categorizes them. It is not aimed at young people. This
-project focuses on youth and on a tested, verifiable pipeline.
+koigenhamar.no collects events from Hamar and some of the surrounding area in
+one place. It is not aimed specifically at young people, and it does not say
+how its events are collected (by API, scraping, AI or by hand); its About page
+only asks organizers to post through Hamar municipality's culture calendar.
+This project focuses on youth, and on a pipeline that is open about its
+sources, tested against labelled cases, and approved by a person before
+anything is published.
 
 ## Known limitations
 
