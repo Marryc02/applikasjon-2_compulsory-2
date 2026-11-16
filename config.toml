@@ -2,13 +2,17 @@
 # environment variables (see .env.example).
 
 [source]
-# "synthetic" = simulated Kulturnett feed (until we get API access)
-# "kulturnett" = live Kulturnett Innlandet API (not available yet)
+# "synthetic" = made-up events in a format inspired by Kulturnett Innlandet's
+#               "Hva skjer" calendar. The only source the project uses.
+# "kulturnett" = placeholder only. Kulturnett Innlandet was dropped as a source
+#               (12 Nov, legal uncertainty); this option just stops with a message.
+# Saved files (test sets, files from organizations) are run with --offline <file>.
 default = "synthetic"
 
 [area]
 name = "Hamar-området"
-# Municipalities in the Hva skjer calendar's "Hamar-området".
+# The four municipalities of "Hamar-området" (as grouped in the Hva skjer calendar).
+# Events elsewhere are rejected as outside_area.
 kommuner = ["Hamar", "Løten", "Ringsaker", "Stange"]
 
 [window]

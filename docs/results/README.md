@@ -1,11 +1,11 @@
 # Evaluation results
 
-Raw output of `python -m eval.run_eval`, kept for the white paper. Copied
-from `out/eval/` (which git ignores). All runs use run time
+Raw output kept for the white paper, copied from `out/` (which git ignores).
+Evaluation runs (`python -m eval.run_eval`) use run time
 `2026-11-02T08:00:00+01:00`. LLM runs use `claude-haiku-5-5`.
 
 Test set 1 and test set 2 are the two human-written fixtures in
-`fixtures/kulturnett_HUMAN_*.json` (13 judgement events in total: 6 + 7).
+`fixtures/testing/kulturnett_HUMAN_*.json` (13 judgement events in total: 6 + 7).
 "Judgement" = events the classifier decides; "code" = rejections and
 duplicates, decided by fixed rules.
 
@@ -23,6 +23,15 @@ duplicates, decided by fixed rules.
 | `20261109-195850-llm-x5.json` | LLM, ask twice | 2 | 5 | Repair, regression: 2, 4, 3, 5, 4; side effect: book club sent to review with "no category" |
 | `20261109-201558-llm-x5.json` | LLM, ask twice + category fix | 2 | 5 | Final regression: 4, 5, 4, 3, 5 (mean 4.2); book club accepted 5/5; scam to review 4/5; nothing harmful published |
 
+Stress test 2 (dependency failure, `python -m eval.stress_source`; 9 broken
+inputs + an unreachable source, keyword baseline):
+
+| File | What it shows |
+|---|---|
+| `20261112-182001.json` | Observe: 2 crashes (02 not JSON, 04 garbage records), 03 halted with a misleading reason, halt messages without a cause. Only 09 (half broken) staged |
+| `20261112-190002.json` | Regression after repairs R1–R3: 0 crashes, every halt names its main reason, only 09 staged |
+
 Summary: code checks 8/8 in every run. Classifier on the 13 judgement events:
-baseline 2/13, Claude 8/13 (single runs). Harmful test events (scam, marijuana)
+baseline 2/13, Claude 8/13 (single runs, 9 Nov). The final evaluation run
+after the demo will be added here. Harmful test events (scam, marijuana)
 were never published in any run.

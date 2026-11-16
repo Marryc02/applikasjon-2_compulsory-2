@@ -1,13 +1,13 @@
 # T11 · Public web page for approved events
 
-**Status:** done (first version)
+**Status:** done
 **Code:** `web/` (Flask) · **Tests:** `tests/test_web.py`
 
 ## Decisions (2026-11-12)
 - The only UI is a **read-only public page** for young people.
 - **No organizer form.** Organizations send events by email or similar, and we
   add them by hand. A submission page may come later if the project continues.
-- **Admin stays on the command line** (`python -m harness review` / `approve`).
+- **Admin stays on the command line** (`python -m harness review` / `approve` / `unpublish`).
 - Approval flow is unchanged: the model's `yes` events wait for run approval;
   `unsure` events go through `review` first. Nothing is public until `approve`.
 - Kulturnett is dropped as a source (see "Out of scope").
@@ -37,6 +37,8 @@ A Norwegian web page that shows all approved events that haven't happened yet
   subscribe to a feed in a calendar app.
 
 ## Out of scope (separate tasks)
-- Removing Kulturnett from the code and docs, and deciding the new event sources.
-- A way to add events from organizers by hand.
-- Organizer submission page, admin web page.
+- ~~Removing Kulturnett from the docs~~ (done 12 Nov: README, SPEC, config, T01,
+  T08). File and option names that say `kulturnett` remain and refer to the format.
+- ~~A way to add events from organizers by hand~~ (done: put the file in
+  `fixtures/inbox/` and run it with `--offline`).
+- New event sources (T09), organizer submission page, admin web page: not planned.

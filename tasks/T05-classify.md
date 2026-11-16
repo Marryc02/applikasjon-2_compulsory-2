@@ -1,6 +1,6 @@
 # T05 · Youth relevance and categories
 
-**Status:** done (LLM path tested only with a fake client)
+**Status:** done. Tested live with Claude Haiku (`claude-haiku-5-5`) on 9 and 12 Nov.
 **Code:** `harness/classify.py` · **Context:** `harness/context/categories.md`, `harness/context/classify_prompt.md`
 
 ## Goal
@@ -22,7 +22,16 @@ events to review without any safety gain).
 ## Acceptance check
 - `python -m pytest -k "parse_llm or baseline or fall_back or budget or combine or disagreement"` passes.
 - `python -m eval.run_eval` reports outcome accuracy and per-category precision/recall.
-- Live LLM run: still to do (needs an Anthropic key).
+- Live LLM run: done. Latest run (12 Nov) on the two human-written test sets:
+  8/13 judgement events correct (baseline 2/13), no fallbacks. The final run
+  for the paper comes after the demo.
+
+## Output limit (fixed 9 Nov)
+Haiku thinks before answering, and thinking counts toward the output limit. At
+120 tokens some replies were cut off before any answer (`stop_reason =
+max_tokens`) and the baseline silently took over. Now `max_output_tokens = 2000`
+and `effort` in `config.toml`, no retry on `max_tokens`, a warning in `run_eval`
+when the baseline was used, and error samples in the report.
 
 ## Warning
 The baseline scores 100 % on the synthetic set, but the synthetic events and

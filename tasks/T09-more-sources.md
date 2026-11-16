@@ -1,6 +1,7 @@
 # T09 · More sources (optional)
 
-**Status:** TODO (planning)
+**Status:** not started. Ideas for after the exam. For now, organizations send
+a file that a person runs with `--offline` (`fixtures/inbox/`, see T11).
 
 ## Ideas
 - **Brønnøysundregistrene (open API, no key):** voluntary organizations

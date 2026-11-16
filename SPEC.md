@@ -55,7 +55,7 @@ The workflow's output is correct when, for a run:
    approvals don't publish it again (matched by ID, or by title, date and
    venue). Checked by tests.
 
-Status (12 Nov 2026):
+Status (12 Nov 2026; the final evaluation run comes after the demo):
 
 - **Criteria 1, 2, 3, 5, 6 and 7** are checked by `python -m pytest` on synthetic
   data. The web page has its own tests (`tests/test_web.py`): it shows only
@@ -70,14 +70,15 @@ Status (12 Nov 2026):
   human-written test sets (one per group member, 13 events that need
   judgement). The 22 synthetic events are not used for this, because they were
   written together with the baseline classifier.
-  - Claude Haiku got the expected outcome on 8 of 13 judgement events; the
-    keyword baseline on 2 of 13. Events decided by code rules: 8 of 8 for both
-    (9 Nov).
+  - Claude Haiku got the expected outcome on 8 of 13 judgement events (3 of 6
+    and 5 of 7), both on 9 Nov and in a check run on 12 Nov; the keyword
+    baseline on 2 of 13. Events decided by code rules: 8 of 8 for both.
   - Stress test 1 ran each test set 5 times: some answers change between
     runs. The model is now asked twice, and an event goes to review when the
-    two answers disagree about the audience. Final run on test set 2: mean
+    two answers disagree about the audience. Final regression on test set 2: mean
     4.2 of 7. No harmful event was published in any run.
-  - One event was published against its label in the 9 Nov runs: a trampoline
-    park, labelled not for youth.
+  - One event was published against its label, in the 9 Nov and 12 Nov runs:
+    a trampoline park, labelled not for youth. Most other misses
+    went to review instead of being published.
   - The test sets are small, so these numbers are indications. They will be
     updated after the final evaluation run.

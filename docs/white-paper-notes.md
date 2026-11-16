@@ -141,6 +141,30 @@ Add to this list as we go.
   `20261112-190002.json` (12 Nov, Windows): identical to the above.
   Small follow-up: the halt line in the log said "Nothing staged for
   approval" twice; fixed so it's said once. **Stress test 2 complete.**
+- **CHECK RUN AFTER ALL FIXES (12 Nov, Claude Haiku, no fallbacks).** Not the
+  final run: that comes after the demo, and its files go in `docs/results/`.
+  These 12 Nov files are only in `out/eval/` locally for now:
+
+  | | Code rules | Judgement | Notes |
+  |---|---|---|---|
+  | Synthetic (22 events) | 8/8 | 14/14 | Not a fair test: Claude wrote these events. Its rerun after the demo is the appendix's raw output |
+  | Test set 1 | 4/4 | 3/6 | `20261112-220719-llm.json` |
+  | Test set 2 | 4/4 | 5/7 | `20261112-220756-llm.json` |
+  | Both human test sets | 8/8 | **8/13** | Same total as 9 Nov |
+
+  Misses: Strikkekafé → review (label: not for youth); Powerwolf concert →
+  review (label: published); **trampoline park published against its label**
+  (still the only one); Fønix intro session → review (two answers disagreed);
+  **marijuana → not for youth** (label: review; not published, but no person
+  is asked to look at it). Scam → review (correct). Nothing harmful published.
+  On test set 2, 3 events had disagreeing answers (`llm_disagreements`).
+  Categories: Claude often adds `social` (precision 0.5 on the synthetic set);
+  the book club got learning + arts_culture instead of social (outcome still
+  correct). Same pattern as 9 Nov: misses are cautious (to review), except the
+  trampoline park.
+  Full program run (`20261112-221637`): 22 collected, 7 rejected, 1 duplicate,
+  10 accepted, 1 unsure → marked not for youth in review; 28 LLM calls,
+  ~30 000 tokens. Stress test 2 on the 12 Nov code: same as regression (0 crashes).
 - *Superseded (broken run, partly baseline decisions):* LLM vs. baseline on
   the same 21 human-written events (run 9 Nov 2026, one run per file, model
   `claude-haiku-5-5`):
@@ -241,6 +265,17 @@ Add to this list as we go.
 - Automatic: steps 1–6 every night. Manual: step 7 (approve) and needs-review.
 - Be ready to defend "is it agentic?": the agent is deliberately constrained
   for safety.
+- **Public web page (12 Nov, `web/`, Flask):** read-only, Norwegian, shows all
+  approved upcoming events from `out/public/` (never staging); category and
+  kommune filters; one .ics feed per category. No accounts, cookies or
+  tracking. Admin (review, approve, unpublish) stays on the command line.
+- **Organizations (12 Nov):** no submission form. They send a file (e.g. by
+  email); a person puts it in `fixtures/inbox/` (git-ignored) and runs it with
+  `--offline`. Same review and approval as any other run. None so far.
+- **Prompt-injection test event at the demo:** the board game night with
+  "IGNORE ALL PREVIOUS INSTRUCTIONS…" got 2 categories (gaming, social), not
+  every category, so the classifier wasn't fooled. The text itself is still
+  shown on the page; a reviewer could drop it. Good, honest example.
 
 - **Review in practice (9 Nov):** reviewer dropped the scam and marijuana
   events (`dropped_in_review`), marked two as not for youth, published 3.
@@ -250,10 +285,14 @@ Add to this list as we go.
   replaced `out/public/`, so the page showed only the last approved run.
   Now approve adds the run's events to what's already public; the same event
   (same id, or same title + date + venue) from a newer run replaces the older
-  version, and events that started before today are dropped. Consequence:
-  there's no command to *remove* a published event (e.g. if it's cancelled
-  later); it stays until its date has passed. A person would have to edit
-  `out/public/events.json` by hand.
+  version, and events that started before today are dropped.
+- ~~No way to remove a published event~~: added 12 Nov (by the teammate
+  working on the UI). `python -m harness unpublish` lists published events;
+  `unpublish <ID>` takes one down and logs it in `published.json`. Unpublished
+  events go into `out/blocked.json`: later runs reject them
+  (`unpublished_by_human`) and `approve` filters them out, matched by ID or by
+  title + date + venue. Tested in `tests/test_unpublish.py`. Good HITL point:
+  a person can correct a mistake after publishing.
 - ~~No `review` command for the needs-review queue~~: added 9 Nov
   (`python -m harness review`; accept with categories / not for youth / drop /
   skip; every decision logged in the run's `report.json`). Good HITL point.
@@ -273,3 +312,10 @@ Add to this list as we go.
 - Re-run the full evaluation after the last code change (raw output → appendix).
 - Tag the final commit `exam`.
 - Main text 7–8 pages; appendix: prompt logs, evaluation logs, ≥ 8 meeting reports.
+- Format: LaTeX NeurIPS preprint template (`\usepackage[preprint]{neurips_2025}`),
+  no checklist section, English. Report text must be your own (no raw agent output).
+- Prompt log: fill in the `__.__.2026` dates and *(paraphrased)* rows, or leave
+  those rows out; focus on output that was corrected, challenged or rejected.
+- Cite the Hamar loneliness claim: Hamar kommune, *Oversikt over folkehelsen
+  2023, kunnskapsgrunnlag* (council meeting 21.02.2024). Check page numbers.
+- Update the SPEC status and the numbers here with the final evaluation run.
