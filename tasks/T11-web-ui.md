@@ -26,6 +26,10 @@ A Norwegian web page that shows all approved events that haven't happened yet
 - "Legg i kalender (.ics)" per event: downloads only that event
   (`/arrangement/<id>.ics`). Only upcoming events in `out/public/`; anything
   else is 404. Description scrubbed for contact details (added 16 Nov).
+- "Vis på kart" per event with valid `lat`/`lon`: an OpenStreetMap embed
+  (no API key) opens under the event, loaded only on click (`web/static/map.js`).
+  Opening one map closes the other. Without JavaScript the button is hidden.
+  CSP allows only our own script and frames from www.openstreetmap.org (added 16 Nov).
 - Works on a phone. No accounts, no cookies, no tracking, no personal data.
 
 ## Acceptance check
@@ -37,7 +41,10 @@ A Norwegian web page that shows all approved events that haven't happened yet
   - the empty state when nothing is published;
   - no emails or phone numbers in the page;
   - each event's `.ics` download holds exactly that event, only after approval,
-    never for past or unknown events, and without contact details.
+    never for past or unknown events, and without contact details;
+  - the map button appears only for events with valid coordinates, nothing is
+    loaded from OpenStreetMap on page load, and the CSP is as narrow as above.
+- Manual: open two maps in a row; the first one closes.
 - Manual: run the pipeline, `approve`, open the page, see the events and
   subscribe to a feed in a calendar app.
 

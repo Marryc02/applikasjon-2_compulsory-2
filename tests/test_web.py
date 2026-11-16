@@ -255,3 +255,42 @@ def test_no_event_ics_before_approval(tmp_path):
     run_dir = _pipeline(tmp_path)
     some_id = json.loads((run_dir / "events.json").read_text(encoding="utf-8"))[0]["id"]
     assert _client(tmp_path / "public").get(f"/arrangement/{some_id}.ics").status_code == 404
+
+
+def test_map_button_only_for_events_with_valid_coordinates(tmp_path):
+    public = _publish(tmp_path, [
+        _event(1, "Med kart", "2026-11-03T19:00:00+01:00", ["music"], lat=60.7949, lon=11.0669),
+        _event(2, "Uten kart", "2026-11-03T20:00:00+01:00", ["music"], lat=None, lon=None),
+        _event(3, "Feil kart", "2026-11-03T21:00:00+01:00", ["music"], lat="60.79", lon=200),
+    ])
+    page = _page(_client(public))
+    assert page.count('class="map-btn"') == 1 and page.count('class="map"') == 1
+    assert ('data-map-src="https://www.openstreetmap.org/export/embed.html?'
+            'bbox=11.06090%2C60.79190%2C11.07290%2C60.79790&amp;layer=mapnik&amp;marker=60.79490%2C11.06690"') in page
+    assert 'aria-controls="map-0"' in page and 'id="map-0"' in page
+
+
+def test_map_ids_are_unique_across_days(tmp_path):
+    public = _publish(tmp_path, [
+        _event(i, f"Event {i}", f"2026-11-0{3 + i % 2}T1{i}:00:00+01:00", ["music"], lat=60.79, lon=11.06)
+        for i in range(4)])
+    page = _page(_client(public))
+    ids = [f'id="map-{n}"' for n in range(4)]
+    assert all(page.count(i) == 1 for i in ids)
+
+
+def test_map_is_not_loaded_until_clicked(tmp_path):
+    """No request to openstreetmap.org on page load: the page has no iframe, only the script."""
+    public = _publish(tmp_path, [_event(1, "Konsert", "2026-11-03T19:00:00+01:00", ["music"], lat=60.79, lon=11.06)])
+    client = _client(public)
+    page = _page(client)
+    assert "<iframe" not in page and "/static/map.js" in page
+    js = client.get("/static/map.js")
+    assert js.status_code == 200 and "replaceChildren" in js.get_data(as_text=True)
+    js.close()
+
+
+def test_csp_allows_only_own_scripts_and_openstreetmap_frames(tmp_path):
+    csp = _client(_publish(tmp_path, [])).get("/").headers["Content-Security-Policy"]
+    assert "script-src 'self'" in csp and "frame-src https://www.openstreetmap.org" in csp
+    assert "unsafe-eval" not in csp and "script-src 'self' 'unsafe-inline'" not in csp

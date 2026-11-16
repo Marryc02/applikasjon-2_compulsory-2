@@ -1,6 +1,6 @@
 # Spec
 
-**Written alongside Claude, based on discussions between groupmates. Last updated 12 Nov 2026.**
+**Written alongside Claude, based on discussions between groupmates. Last updated 16 Nov 2026.**
 
 
 ## Problem
@@ -15,9 +15,11 @@ but it is aimed at everyone, and the entire county, so youth activities are mixe
 Our workflow runs on synthetic events whose format is inspired by said calendar, plus files from any potential future organizations. It 
 checks that each event has the required information, removes duplicates, decides whether it is for young people, 
 sorts it into categories (music, sports, gaming, …) and, after a person approves, publishes the youth events as a filterable calendar, 
-one subscribable ics feed per category and a weekly digest in Norwegian.
+one subscribable ics feed per category and a weekly digest in Norwegian. On the web page, each event can also be
+downloaded on its own as an .ics file and shown on a map.
 
 The goal is to make a solution that does not involve user accounts or personal data: People "follow" a category by subscribing to its feed in their own calendar app.
+The only outside service a visitor's browser contacts is OpenStreetMap, and only when they choose to open a map.
 
 
 ## Users
@@ -55,11 +57,14 @@ The workflow's output is correct when, for a run:
    approvals don't publish it again (matched by ID, or by title, date and
    venue). Checked by tests.
 
-Status (12 Nov 2026; the final evaluation run comes after the demo):
+Status (12 Nov 2026, web page updated 16 Nov; the final evaluation run comes after the demo):
 
 - **Criteria 1, 2, 3, 5, 6 and 7** are checked by `python -m pytest` on synthetic
   data. The web page has its own tests (`tests/test_web.py`): it shows only
-  approved events and no emails or phone numbers. Unpublishing is tested in
+  approved events and no emails or phone numbers, also in the single-event
+  .ics downloads, and loads nothing from OpenStreetMap until a map is opened.
+  `tests/test_norwegian_labels.py` checks that feeds and the digest use
+  Norwegian category names. Unpublishing is tested in
   `tests/test_unpublish.py`. Stress test 2 (`python -m eval.stress_source`)
   fed the pipeline 9 kinds of broken source data and an unreachable source.
   At first, 2 cases crashed and the halt messages didn't say why. Now

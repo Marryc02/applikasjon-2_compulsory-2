@@ -269,6 +269,15 @@ Add to this list as we go.
   approved upcoming events from `out/public/` (never staging); category and
   kommune filters; one .ics feed per category. No accounts, cookies or
   tracking. Admin (review, approve, unpublish) stays on the command line.
+- **Web page additions (16 Nov):** each event can be downloaded on its own as
+  .ics ("Legg i kalender"), and shown on an OpenStreetMap map ("Vis på kart",
+  one open at a time). Chose OpenStreetMap over Google Maps: no API key and no
+  Google tracking; the map loads only on click, but then the visitor's IP goes
+  to OpenStreetMap (privacy trade-off, noted in README). Feed names, event
+  categories in .ics and the digest were still English category IDs ("Unge i
+  Hamar – learning"); now Norwegian everywhere (`harness/labels.py`).
+  Subscribing from Google Calendar needs a public address: on localhost only
+  import works. Not tested with real hosting.
 - **Organizations (12 Nov):** no submission form. They send a file (e.g. by
   email); a person puts it in `fixtures/inbox/` (git-ignored) and runs it with
   `--offline`. Same review and approval as any other run. None so far.

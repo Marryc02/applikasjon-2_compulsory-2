@@ -23,6 +23,10 @@ Never use bare `python`, `pip`, or `pytest` commands. Always prefix with `.venv\
 - `harness/context/`: files the workflow reads at run time. `categories.md` is the only
   place categories are defined. `classify_prompt.md` is the LLM prompt.
   `event_schema.md` defines the event format and validation rules.
+- `harness/labels.py`: Norwegian display names for category IDs (web page, feeds, digest).
+- `web/`: read-only public page (Flask, `python -m web`). Reads only `out/public/`. Per-event .ics
+  download and an OpenStreetMap map (`web/static/map.js`, loaded only on click).
+- `tests/`: checks for the web page, unpublishing and Norwegian labels (run with the `eval/` checks).
 - `tasks/`: one file per task with an acceptance check. Read the task file before working on a task.
 - `eval/`: checks (pytest) and `run_eval.py` (evaluation against labelled fixtures).
 - `fixtures/testing/`: saved inputs for offline, reproducible runs and tests. Files marked `SYNTHETIC` are made up; `stress/` holds broken data for stress test 2.

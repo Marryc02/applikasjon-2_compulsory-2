@@ -2,6 +2,7 @@
 
 Reads only `out/public/`, which only `python -m harness approve` writes to.
 Never reads `out/staging/`, never writes anything, no accounts, no cookies.
+Maps come from openstreetmap.org, loaded only when a visitor clicks "Vis på kart".
 """
 from __future__ import annotations
 
@@ -11,6 +12,7 @@ import unicodedata
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlencode
 
 from flask import Flask, Response, abort, render_template, request, send_from_directory
 
@@ -51,6 +53,20 @@ def _filename(title: str) -> str:
     return f"{slug or 'arrangement'}.ics"
 
 
+def _map(ev: dict) -> dict | None:
+    """OpenStreetMap embed and link for an event with valid coordinates, else None."""
+    lat, lon = ev.get("lat"), ev.get("lon")
+    if isinstance(lat, bool) or isinstance(lon, bool) or not all(isinstance(v, (int, float)) for v in (lat, lon)):
+        return None
+    if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        return None
+    bbox = f"{lon - 0.006:.5f},{lat - 0.003:.5f},{lon + 0.006:.5f},{lat + 0.003:.5f}"
+    embed = "https://www.openstreetmap.org/export/embed.html?" + urlencode(
+        {"bbox": bbox, "layer": "mapnik", "marker": f"{lat:.5f},{lon:.5f}"})
+    link = f"https://www.openstreetmap.org/?mlat={lat:.5f}&mlon={lon:.5f}#map=16/{lat:.5f}/{lon:.5f}"
+    return {"embed": embed, "link": link}
+
+
 def _view(ev: dict) -> dict:
     """Only the fields the page shows. Free text is scrubbed again as a safety net."""
     start = ev["_start"]
@@ -65,19 +81,20 @@ def _view(ev: dict) -> dict:
         "description": strip_pii(ev.get("description") or "")[0],
         "url": url if url.startswith("https://") else "",
         "categories": [(c, label(c)) for c in ev.get("categories", [])],
+        "map": _map(ev),
     }
 
 
 def _group_by_day(events: list[dict]) -> list[tuple[str, list[dict]]]:
     days: list[tuple[str, list[dict]]] = []
     current = None
-    for ev in events:
+    for n, ev in enumerate(events):
         start = ev["_start"]
         if start.date() != current:
             current = start.date()
             heading = f"{DAYS_NO[start.weekday()].capitalize()} {start.day}. {MONTHS_NO[start.month - 1]}"
             days.append((heading, []))
-        days[-1][1].append(_view(ev))
+        days[-1][1].append({**_view(ev), "n": n})
     return days
 
 
@@ -158,7 +175,8 @@ def create_app(public_dir: Path | None = None,
     def headers(resp):
         resp.headers["Referrer-Policy"] = "no-referrer"
         resp.headers["X-Content-Type-Options"] = "nosniff"
-        resp.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'self' 'unsafe-inline'"
+        resp.headers["Content-Security-Policy"] = ("default-src 'none'; style-src 'self' 'unsafe-inline'; "
+                                                   "script-src 'self'; frame-src https://www.openstreetmap.org")
         return resp
 
     return app

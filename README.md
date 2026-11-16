@@ -78,7 +78,7 @@ Output:
 | `tasks/` | One `.md` per task, each with an acceptance check |
 | `web/` | Public web page (Flask) that shows the approved events |
 | `eval/` | Checks (pytest), the evaluation run (`run_eval.py`) and stress test 2 (`make_stress_inputs.py`, `stress_source.py`) |
-| `tests/` | Checks for the web page (`test_web.py`) |
+| `tests/` | Checks for the web page (`test_web.py`), unpublishing (`test_unpublish.py`) and Norwegian names in feeds and digest (`test_norwegian_labels.py`) |
 | `fixtures/testing/` | Saved inputs for offline, reproducible runs and tests. `SYNTHETIC` = made up, `HUMAN` = written by us, `stress/` = broken data for stress test 2 |
 | `fixtures/inbox/` | Event files received from organizations. Git-ignored (may contain personal data); run with `python -m harness run --offline fixtures/inbox/<file>.json` |
 | `docs/meetings/` | Meeting reports (one per meeting) |
@@ -124,7 +124,12 @@ all approved runs. Before anything is approved it shows an empty page.
 - "Legg i kalender (.ics)" on each event downloads just that event as an
   `.ics` file (`/arrangement/<id>.ics`), for adding it to a calendar once
   without subscribing.
-- No accounts, no cookies, no tracking. Descriptions are run through the
+- "Vis på kart" on each event with coordinates (`lat`/`lon`) opens an
+  OpenStreetMap map under the event; only one map is open at a time. The map
+  is loaded from openstreetmap.org only when someone clicks the button, so
+  opening a map sends the viewer's IP address to OpenStreetMap. Events without
+  coordinates get no map button (no geocoding of addresses yet).
+- No accounts, no cookies, no tracking on our side (see the map note above). Descriptions are run through the
   privacy filter once more before they are shown.
 - Admin (review, approve, unpublish) stays on the command line.
 - Uses Flask's development server and listens only on your own computer by
@@ -175,3 +180,8 @@ anything is published.
 - Personal **names** in event text are not removed (only emails and phone numbers).
 - The baseline classifier uses simple keyword lists.
 - The LLM classifier (Claude Haiku) has been evaluated on 13 judgement events in two test sets; the sample is small.
+- Subscribing to a feed from Google Calendar ("From URL") needs the site on a
+  public address; on `127.0.0.1` only downloading/importing the files works.
+  Subscriptions have not been tested yet.
+- Events have only a start time, so calendar apps choose the length themselves.
+- Only events with coordinates get a map; addresses are not geocoded.

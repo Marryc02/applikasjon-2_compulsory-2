@@ -15,7 +15,7 @@ Every source is converted to this format by its normalizer
 | `venue_name` | string | yes | |
 | `address` | string | no | |
 | `kommune` | string | yes | Municipality, used for the area check |
-| `lat`, `lon` | number | no | For a map later; not used for validation |
+| `lat`, `lon` | number | no | Shown as a map on the web page; not used for validation |
 | `organizer` | string | no | |
 | `price` | string | no | As given by the source, e.g. `Gratis`, `50 kr` |
 | `source_categories` | list of strings | no | Categories as given by the source (hints only) |
