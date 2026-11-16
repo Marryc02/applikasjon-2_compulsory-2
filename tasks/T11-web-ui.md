@@ -23,6 +23,9 @@ A Norwegian web page that shows all approved events that haven't happened yet
 - Filter by category (IDs from `harness/context/categories.md`, Norwegian labels)
   and by kommune (`area.kommuner` in `config.toml`). The two filters combine.
 - One subscribe link per category `.ics` feed, plus `all.ics`.
+- "Legg i kalender (.ics)" per event: downloads only that event
+  (`/arrangement/<id>.ics`). Only upcoming events in `out/public/`; anything
+  else is 404. Description scrubbed for contact details (added 16 Nov).
 - Works on a phone. No accounts, no cookies, no tracking, no personal data.
 
 ## Acceptance check
@@ -32,7 +35,9 @@ A Norwegian web page that shows all approved events that haven't happened yet
   - the category filter and feed links match `categories.md`;
   - the kommune filter matches `config.toml`, and both filters combine;
   - the empty state when nothing is published;
-  - no emails or phone numbers in the page.
+  - no emails or phone numbers in the page;
+  - each event's `.ics` download holds exactly that event, only after approval,
+    never for past or unknown events, and without contact details.
 - Manual: run the pipeline, `approve`, open the page, see the events and
   subscribe to a feed in a calendar app.
 

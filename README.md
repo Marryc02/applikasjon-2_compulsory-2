@@ -121,6 +121,9 @@ all approved runs. Before anything is approved it shows an empty page.
 - Filter by category and by kommune; the two filters can be combined.
 - One subscribe link per category feed, plus one with all events
   (`/feeds/<category>.ics`, `/feeds/all.ics`).
+- "Legg i kalender (.ics)" on each event downloads just that event as an
+  `.ics` file (`/arrangement/<id>.ics`), for adding it to a calendar once
+  without subscribing.
 - No accounts, no cookies, no tracking. Descriptions are run through the
   privacy filter once more before they are shown.
 - Admin (review, approve, unpublish) stays on the command line.

@@ -206,7 +206,52 @@ def test_page_never_writes(tmp_path):
     public = _publish(tmp_path, [_event(1, "Konsert", "2026-11-03T19:00:00+01:00", ["music"])])
     before = {p: p.stat().st_mtime_ns for p in tmp_path.rglob("*")}
     client = _client(public)
-    for path in ["/", "/?kategori=music", "/feeds/all.ics", "/feeds/music.ics", "/feeds/nope.ics"]:
+    for path in ["/", "/?kategori=music", "/feeds/all.ics", "/feeds/music.ics", "/feeds/nope.ics",
+                 "/arrangement/test:1.ics"]:
         client.get(path)
     after = {p: p.stat().st_mtime_ns for p in tmp_path.rglob("*")}
     assert before == after
+
+
+def test_each_event_links_to_its_own_ics_file(tmp_path):
+    public = _publish(tmp_path, [_event(1, "Konsert", "2026-11-03T19:00:00+01:00", ["music"]),
+                                 _event(2, "Brettspill", "2026-11-04T18:00:00+01:00", ["gaming"])])
+    client = _client(public)
+    page = _page(client)
+    assert "/arrangement/test:1.ics" in page and "/arrangement/test:2.ics" in page
+    resp = client.get("/arrangement/test:1.ics")
+    assert resp.status_code == 200
+    assert resp.mimetype == "text/calendar"
+    assert resp.headers["Content-Disposition"] == 'attachment; filename="konsert.ics"'
+    body = resp.get_data(as_text=True)
+    assert body.startswith("BEGIN:VCALENDAR") and body.count("BEGIN:VEVENT") == 1
+    assert "SUMMARY:Konsert" in body and "UID:test:1@hamar-youth-events" in body
+    assert "DTSTART:20261103T180000Z" in body
+    assert "Brettspill" not in body
+
+
+def test_event_ics_file_name_is_ascii():
+    from web.app import _filename
+    assert _filename("Åpen kafé på Ungdomshuset!") == "apen-kafe-pa-ungdomshuset.ics"
+    assert _filename("Ærlig talt – Østre Torg") == "aerlig-talt-ostre-torg.ics"
+    assert _filename("???") == "arrangement.ics"
+
+
+def test_event_ics_has_no_contact_details(tmp_path):
+    public = _publish(tmp_path, [_event(1, "Kurs", "2026-11-03T19:00:00+01:00", ["learning"],
+                                        description="Spørsmål? Send til ola@example.no eller ring 912 34 567.")])
+    body = _client(public).get("/arrangement/test:1.ics").get_data(as_text=True)
+    assert "ola@example.no" not in body and "912 34 567" not in body
+
+
+@pytest.mark.parametrize("path", ["/arrangement/test:9.ics", "/arrangement/test:1.ics",
+                                  "/arrangement/.ics", "/arrangement/../events.json"])
+def test_unknown_or_past_events_have_no_ics(tmp_path, path):
+    public = _publish(tmp_path, [_event(1, "Var i går", "2026-11-01T19:00:00+01:00", ["music"])])
+    assert _client(public).get(path).status_code == 404
+
+
+def test_no_event_ics_before_approval(tmp_path):
+    run_dir = _pipeline(tmp_path)
+    some_id = json.loads((run_dir / "events.json").read_text(encoding="utf-8"))[0]["id"]
+    assert _client(tmp_path / "public").get(f"/arrangement/{some_id}.ics").status_code == 404

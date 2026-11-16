@@ -6,34 +6,20 @@ Never reads `out/staging/`, never writes anything, no accounts, no cookies.
 from __future__ import annotations
 
 import json
+import re
+import unicodedata
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 
-from flask import Flask, abort, render_template, request, send_from_directory
+from flask import Flask, Response, abort, render_template, request, send_from_directory
 
 from harness.classify import load_categories
 from harness.config import OSLO, OUT_DIR, load_config
+from harness.ics import build_calendar
+from harness.labels import label
 from harness.privacy import strip_pii
 from harness.publish import DAYS_NO, MONTHS_NO
-
-# Display names only. The category IDs themselves come from categories.md;
-# a new category without a label here is shown by its ID.
-LABELS_NO = {
-    "music": "Musikk",
-    "sports": "Sport",
-    "gaming": "Spill",
-    "arts_culture": "Kunst og kultur",
-    "film": "Film",
-    "outdoors": "Friluftsliv",
-    "food": "Mat",
-    "learning": "Læring",
-    "social": "Sosialt",
-}
-
-
-def label(cat: str) -> str:
-    return LABELS_NO.get(cat, cat)
 
 
 def _read_json(path: Path, default):
@@ -57,11 +43,20 @@ def _upcoming(events: list[dict], now: datetime) -> list[dict]:
     return sorted(out, key=lambda e: e["_start"])
 
 
+def _filename(title: str) -> str:
+    """ASCII file name for a downloaded event, e.g. "Konsert på Kulturhuset" -> "konsert-pa-kulturhuset.ics"."""
+    text = (title or "").lower().translate(str.maketrans({"æ": "ae", "ø": "o", "å": "a"}))
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
+    slug = re.sub(r"[^a-z0-9]+", "-", text).strip("-")[:60].strip("-")
+    return f"{slug or 'arrangement'}.ics"
+
+
 def _view(ev: dict) -> dict:
     """Only the fields the page shows. Free text is scrubbed again as a safety net."""
     start = ev["_start"]
     url = ev.get("source_url") or ""
     return {
+        "id": ev.get("id") or "",
         "title": ev.get("title", ""),
         "time": "Hele dagen" if ev.get("all_day") else f"{start:%H:%M}",
         "venue": ev.get("venue_name", ""),
@@ -141,6 +136,23 @@ def create_app(public_dir: Path | None = None,
             abort(404)
         return send_from_directory(public_dir / "feeds", f"{name}.ics",
                                    mimetype="text/calendar", max_age=300)
+
+    @app.get("/arrangement/<path:event_id>.ics")
+    def event_ics(event_id: str):
+        """One upcoming, approved event as a downloadable .ics file ("Legg i kalender")."""
+        if not (public_dir / "published.json").exists():
+            abort(404)
+        events = _read_json(public_dir / "events.json", [])
+        upcoming = _upcoming(events if isinstance(events, list) else [], now_fn())
+        match = next((e for e in upcoming if e.get("id") and e["id"] == event_id), None)
+        if match is None:
+            abort(404)
+        ev = {k: v for k, v in match.items() if k != "_start"}
+        ev["description"] = strip_pii(ev.get("description") or "")[0]
+        body = build_calendar([ev], ev.get("title") or "Arrangement", now_fn())
+        resp = Response(body, mimetype="text/calendar")
+        resp.headers["Content-Disposition"] = f'attachment; filename="{_filename(ev.get("title", ""))}"'
+        return resp
 
     @app.after_request
     def headers(resp):

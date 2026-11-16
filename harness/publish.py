@@ -15,6 +15,7 @@ from pathlib import Path
 from .config import OUT_DIR, OSLO
 from .dedupe import dedupe_key
 from .ics import build_calendar
+from .labels import label
 from .privacy import strip_pii
 
 DAYS_NO = ["mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag", "søndag"]
@@ -46,7 +47,7 @@ def build_digest(events: list[dict], now: datetime) -> str:
         if day != current_day:
             out += ["", f"## {DAYS_NO[start.weekday()].capitalize()} {start.day}. {MONTHS_NO[start.month - 1]}", ""]
             current_day = day
-        cats = ", ".join(e.get("categories", []))
+        cats = ", ".join(label(c) for c in e.get("categories", []))
         when = "Hele dagen" if e.get("all_day") else f"{start:%H:%M}"
         out.append(f"- **{when}** [{e['title']}]({e['source_url']}), {e['venue_name']} ({cats})")
     out += ["", "_Automatisk satt sammen og godkjent av et menneske før publisering._", ""]
@@ -61,7 +62,7 @@ def write_outputs(target: Path, events: list[dict], allowed: list[str], now: dat
     for cat in sorted(allowed):
         subset = [e for e in events if cat in e.get("categories", [])]
         (feeds / f"{cat}.ics").write_text(
-            build_calendar(subset, f"Unge i Hamar – {cat}", now), encoding="utf-8", newline="")
+            build_calendar(subset, f"Unge i Hamar – {label(cat)}", now), encoding="utf-8", newline="")
     (target / "digest.md").write_text(build_digest(events, now), encoding="utf-8")
 
 

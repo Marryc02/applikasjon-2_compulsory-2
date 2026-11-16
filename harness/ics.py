@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from .labels import label
+
 
 def _escape(text: str) -> str:
     return (text or "").replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
@@ -58,7 +60,7 @@ def build_calendar(events: list[dict], name: str, stamp: datetime) -> str:
             f"LOCATION:{_escape(location)}",
             f"URL:{ev['source_url']}",
             f"DESCRIPTION:{_escape(desc)}",
-            f"CATEGORIES:{','.join(ev.get('categories', []))}",
+            f"CATEGORIES:{','.join(_escape(label(c)) for c in ev.get('categories', []))}",
             "END:VEVENT",
         ]
     lines.append("END:VCALENDAR")
