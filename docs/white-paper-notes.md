@@ -143,7 +143,7 @@ Add to this list as we go.
   approval" twice; fixed so it's said once. **Stress test 2 complete.**
 - **CHECK RUN AFTER ALL FIXES (12 Nov, Claude Haiku, no fallbacks).** Not the
   final run: that comes after the demo, and its files go in `docs/results/`.
-  These 12 Nov files are only in `out/eval/` locally for now:
+  The 12 Nov files are saved in `docs/results/`:
 
   | | Code rules | Judgement | Notes |
   |---|---|---|---|

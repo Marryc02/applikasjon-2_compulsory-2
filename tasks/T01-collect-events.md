@@ -20,7 +20,7 @@ list) stops the run with a plain message, and records that aren't events are
 rejected one by one as `invalid_record` (stress test 2, repairs R1 and R2).
 
 ## Acceptance check
-- `python -m harness run` prints `[1 collect]   22 events from synthetic (simulated Kulturnett feed)`.
+- `python -m harness run` prints `[1 collect]   22 events from synthetic (made-up events)`.
 - `python -m harness run --offline fixtures/testing/kulturnett_HUMAN_markus.json`
   prints `Run time from the file: 2026-11-02T08:00:00+01:00` and stages the run.
 - `python -m harness run --source kulturnett` exits with code 3 and a message

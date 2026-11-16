@@ -17,8 +17,9 @@ Never use bare `python`, `pip`, or `pytest` commands. Always prefix with `.venv\
 ## Layout
 - `harness/`: the workflow. Stages: `sources/` (collect + `kulturnett.normalize`, with `privacy`)
   → `validate` → `dedupe` → `classify` → `publish`. `pipeline.py` wires them. Run with `python -m harness`.
-- `harness/sources/`: `kulturnett.py` (live source: NOT available yet, format ASSUMED, see
-  `harness/context/kulturnett_format.md`) and `synthetic.py` (simulated feed with `_expected` labels).
+- `harness/sources/`: `synthetic.py` (the only source: made-up events with `_expected` labels) and
+  `kulturnett.py` (`normalize()` for our format, inspired by Kulturnett's calendar, see
+  `harness/context/kulturnett_format.md`; `fetch_live()` is a placeholder. Kulturnett was dropped as a source).
 - `harness/context/`: files the workflow reads at run time. `categories.md` is the only
   place categories are defined. `classify_prompt.md` is the LLM prompt.
   `event_schema.md` defines the event format and validation rules.

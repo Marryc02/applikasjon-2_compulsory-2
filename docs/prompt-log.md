@@ -39,3 +39,4 @@ Claude Code in the repository.
 | 12.11.2026 | jking + Claude | Build the public page with Flask; Kulturnett cleanup postponed | `web/` + `tests/test_web.py` (15 tests), Flask added; 96 tests pass |
 | 12.11.2026 | jking + Claude | Add a kommune filter that combines with the category filter | `web/` updated, 5 new tests; 101 tests pass |
 | 2026-11-12 | jking + Claude | CLI command to take one approved event down again and keep it from being republished | `harness unpublish` + block list (`out/blocked.json`), T12, 12 tests; 125 tests pass |
+| 16.11.2026 | jking + Claude | Re-check the repo after the teammate's doc updates, then fix what still said Kulturnett access was pending | Source docstrings, the `--source kulturnett` stop message, the collect line ("synthetic (made-up events)"), `kulturnett_format.md`, CLAUDE.md, `docs/results/README.md` and the white-paper notes updated; 125 tests pass, stress test 2 still 0 crashes |

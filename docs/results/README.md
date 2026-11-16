@@ -30,8 +30,19 @@ inputs + an unreachable source, keyword baseline):
 |---|---|
 | `20261112-182001.json` | Observe: 2 crashes (02 not JSON, 04 garbage records), 03 halted with a misleading reason, halt messages without a cause. Only 09 (half broken) staged |
 | `20261112-190002.json` | Regression after repairs R1–R3: 0 crashes, every halt names its main reason, only 09 staged |
+| `20261112-220849.json` | Rerun on the 12 Nov code (after all fixes): same as the regression, 0 crashes, only 09 staged |
+
+Check run after all fixes (12 Nov, Claude Haiku, no fallbacks). Not the final
+run; that comes after the demo:
+
+| File | Classifier | Test set | Runs | What it shows |
+|---|---|---|---|---|
+| `20261112-220639-llm.json` | LLM, ask twice | synthetic | 1 | Code 8/8, judgement 14/14. Not a fair test: Claude wrote these events |
+| `20261112-220719-llm.json` | LLM, ask twice | 1 | 1 | Code 4/4, judgement 3/6 |
+| `20261112-220756-llm.json` | LLM, ask twice | 2 | 1 | Code 4/4, judgement 5/7; trampoline park published against its label |
+| `20261112-221637-report.json` | LLM | synthetic | 1 | Full program run (`python -m harness run`): 22 collected, 7 rejected, 1 duplicate, 10 accepted; 28 LLM calls, ~30 000 tokens |
 
 Summary: code checks 8/8 in every run. Classifier on the 13 judgement events:
-baseline 2/13, Claude 8/13 (single runs, 9 Nov). The final evaluation run
+baseline 2/13, Claude 8/13 (single runs, 9 Nov and 12 Nov). The final evaluation run
 after the demo will be added here. Harmful test events (scam, marijuana)
 were never published in any run.

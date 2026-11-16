@@ -1,19 +1,16 @@
-# Kulturnett Innlandet record format (ASSUMED)
+# Source record format (inspired by Kulturnett Innlandet)
 
-**Status: we have requested API access from Kulturnett Innlandet
-(kulturnett@innlandetfylke.no) but have not received it. This format is our
-own assumption**, based on what the public "Hva skjer" calendar shows for each
+**Status: this is our own format.** Kulturnett Innlandet was dropped as a
+source on 12 Nov 2026 because of legal uncertainty (see
+`tasks/T08-kulturnett-dropped.md`); the project uses none of their data. The
+format is *inspired by* what their public "Hva skjer" calendar shows for each
 event (title, date and time, place, municipality, category, description, link).
 
-The synthetic generator (`harness/sources/synthetic.py`) produces records in
-this format, and `harness/sources/kulturnett.py` converts them to the internal
-event format. When the real API documentation arrives:
-
-1. Save a real response to `fixtures/` (no personal data).
-2. Update `normalize()` in `harness/sources/kulturnett.py` to map the real
-   fields. Nothing after the normalize stage should need to change.
-3. Implement `fetch_live()`.
-4. Record the decision in a meeting report and in `docs/prompt-log.md` if the agent helped.
+The synthetic generator (`harness/sources/synthetic.py`), the test sets in
+`fixtures/testing/` and files from organizations use this format, and
+`normalize()` in `harness/sources/kulturnett.py` converts it to the internal
+event format. A new real source would get its own module in `harness/sources/`
+that maps its records to this format (or straight to the internal one).
 
 ## Assumed record
 

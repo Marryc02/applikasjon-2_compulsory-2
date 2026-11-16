@@ -58,7 +58,7 @@ def collect(source: str, cfg: dict, now: datetime, offline_file: Path | None = N
         return load_file(offline_file), f"file:{Path(offline_file).name}"
     if source == "synthetic":
         from .synthetic import generate
-        return generate(now), "synthetic (simulated Kulturnett feed)"
+        return generate(now), "synthetic (made-up events)"
     if source == "kulturnett":
         from .kulturnett import fetch_live
         return fetch_live(cfg, now), "kulturnett:live"

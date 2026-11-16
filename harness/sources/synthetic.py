@@ -1,8 +1,9 @@
-"""Simulated Kulturnett feed: SYNTHETIC events in the assumed Kulturnett format
-(harness/context/kulturnett_format.md), with dates relative to the run time.
+"""SYNTHETIC events in our source format (inspired by Kulturnett Innlandet's
+"Hva skjer" calendar, see harness/context/kulturnett_format.md), with dates
+relative to the run time.
 
-Used while we wait for API access, so the whole pipeline (including the nightly
-run) can work end to end. Every record carries an `_expected` label: the outcome
+The project's only built-in source (Kulturnett was dropped on 12 Nov 2026), so
+the whole pipeline (including the nightly run) can work end to end. Every record carries an `_expected` label: the outcome
 a correct pipeline should produce. Labels are written by us (humans), not by
 the pipeline, and are dropped before any stage sees the record.
 

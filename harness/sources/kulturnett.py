@@ -1,8 +1,10 @@
 """Kulturnett Innlandet ("Hva skjer") source.
 
-STATUS: API access requested, not granted yet. The record format is ASSUMED,
-see harness/context/kulturnett_format.md. When the real format is known, only
-this file should need to change.
+STATUS: Kulturnett Innlandet was dropped as a source on 12 Nov 2026 (legal
+uncertainty, see tasks/T08-kulturnett-dropped.md). This module is kept for
+`normalize()`, which converts records in our own format (inspired by their
+"Hva skjer" calendar, see harness/context/kulturnett_format.md). `fetch_live()`
+is only a placeholder that stops with a message.
 """
 from __future__ import annotations
 
@@ -18,7 +20,7 @@ STATUS_MAP = {"publisert": "active", "avlyst": "cancelled", "utsatt": "postponed
 
 def fetch_live(cfg: dict, now: datetime) -> list[dict]:
     raise SourceUnavailable(
-        "Kulturnett Innlandet API access has not been granted yet. "
+        "Kulturnett Innlandet is not used as a source (dropped because of legal uncertainty). "
         "Use --source synthetic, or --offline <file> to replay saved data."
     )
 
